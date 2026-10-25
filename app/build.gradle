@@ -70,7 +70,7 @@ android {
         abi {
             enable true
             reset()
-            include 'armeabi', 'armeabi-v7a', 'x86', 'mips'
+            include 'arm64-v8a', 'armeabi-v7a', 'x86'
             universalApk true
         }
     }
@@ -83,7 +83,7 @@ android {
         }
         fat {
             ndk {
-                abiFilters "armeabi", "armeabi-v7a", "mips", "x86"
+                abiFilters "arm64-v8a", "armeabi-v7a", "x86"
             }
         }
         arm {
@@ -108,7 +108,7 @@ android {
         }
     }
 
-    Map<String, Integer> versionCodes = [armeabi: 114, 'armeabi-v7a': 115, mips: 116, x86: 117]
+    Map<String, Integer> versionCodes = ['arm64-v8a': 118, 'armeabi-v7a': 115, x86: 117]
 
     android.applicationVariants.all { variant ->
         // assign different version code for each output
