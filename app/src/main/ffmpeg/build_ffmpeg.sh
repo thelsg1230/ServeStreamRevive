@@ -17,8 +17,8 @@ export TARGET=$1
 ARM_PLATFORM=$NDK/platforms/android-9/arch-arm/
 ARM_PREBUILT=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64
 
-ARM64_PLATFORM=$NDK/platforms/android-21/arch-arm64/
-ARM64_PREBUILT=$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64
+ARM64_PLATFORM=$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+ARM64_PREBUILT=$NDK/toolchains/llvm/prebuilt/linux-x86_64
 
 X86_PLATFORM=$NDK/platforms/android-9/arch-x86/
 X86_PREBUILT=$NDK/toolchains/x86-4.9/prebuilt/darwin-x86_64
@@ -60,6 +60,7 @@ then
     PLATFORM=$ARM64_PLATFORM
     PREBUILT=$ARM64_PREBUILT
     HOST=aarch64-linux-android
+    CC=$PREBUILT/bin/aarch64-linux-android21-clang
 elif [ $ARCH == "mips" ]
 then
     PLATFORM=$MIPS_PLATFORM
@@ -93,9 +94,7 @@ pushd ffmpeg-$FFMPEG_VERSION
     --enable-cross-compile \
     --extra-libs="-lgcc" \
     --arch=$ARCH \
-    --cc=$PREBUILT/bin/$HOST-gcc \
-    --cross-prefix=$PREBUILT/bin/$HOST- \
-    --nm=$PREBUILT/bin/$HOST-nm \
+    --cc=${CC:-$PREBUILT/bin/$HOST-gcc} \
     --sysroot=$PLATFORM \
     --extra-cflags="$OPTIMIZE_CFLAGS " \
     --enable-shared \
@@ -203,7 +202,7 @@ if [ $TARGET == 'arm64-v8a' ]; then
     CPU=arm64-v8a
     ARCH=arm64
     OPTIMIZE_CFLAGS=
-    PREFIX=$BUILD_DIR/$CPU
+    PREFIX=`pwd`/../jni/ffmpeg/ffmpeg/arm64-v8a
     ADDITIONAL_CONFIGURE_FLAG=
     build_one
 fi
