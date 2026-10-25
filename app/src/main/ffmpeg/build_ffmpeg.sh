@@ -95,6 +95,7 @@ pushd ffmpeg-$FFMPEG_VERSION
     --extra-libs="-lgcc" \
     --arch=$ARCH \
     --cc=${CC:-$PREBUILT/bin/$HOST-gcc} \
+    --strip=$PREBUILT/bin/llvm-strip \
     --sysroot=$PLATFORM \
     --extra-cflags="$OPTIMIZE_CFLAGS " \
     --enable-shared \
