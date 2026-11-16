@@ -18,7 +18,9 @@
 package net.sourceforge.servestream.service;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.os.Build;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
@@ -98,6 +100,7 @@ public class MediaPlaybackService extends Service implements
     public static final int NEXT = 2;
     public static final int LAST = 3;
     public static final int PLAYBACKSERVICE_STATUS = 2;
+    private static final String NOTIFICATION_CHANNEL_ID = "playback";
     
     public static final int SHUFFLE_NONE = 0;
     public static final int SHUFFLE_ON = 1;
@@ -1539,7 +1542,20 @@ public class MediaPlaybackService extends Service implements
         }
     }
 
+    private void ensureNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && nm.getNotificationChannel(NOTIFICATION_CHANNEL_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,
+                        getString(R.string.app_name), NotificationManager.IMPORTANCE_LOW);
+                channel.setShowBadge(false);
+                nm.createNotificationChannel(channel);
+            }
+        }
+    }
+
     private void updateNotification(boolean updateNotification) {
+        ensureNotificationChannel();
         String contentText;
 
         String trackName = getTrackName();
@@ -1569,7 +1585,7 @@ public class MediaPlaybackService extends Service implements
         style.setShowCancelButton(true);
         style.setCancelButtonIntent(createPendingIntent(3, CMDSTOP));
 
-        android.support.v4.app.NotificationCompat.Builder builder = new android.support.v4.app.NotificationCompat.Builder(this)
+        android.support.v4.app.NotificationCompat.Builder builder = new android.support.v4.app.NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle(trackName)
                 .setContentText(contentText)
                 .setContentIntent(contentIntent)

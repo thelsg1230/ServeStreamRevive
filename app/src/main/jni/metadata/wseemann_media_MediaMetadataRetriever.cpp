@@ -143,7 +143,7 @@ wseemann_media_FFmpegMediaMetadataRetriever_setDataSourceAndHeaders(
 
     // Workaround for FFmpeg ticket #998
     // "must convert mms://... streams to mmsh://... for FFmpeg to work"
-    char *restrict_to = strstr(tmp, "mms://");
+    char *restrict_to = (char *) strstr(tmp, "mms://");
     if (restrict_to) {
     	strncpy(restrict_to, "mmsh://", 6);
     	puts(tmp);

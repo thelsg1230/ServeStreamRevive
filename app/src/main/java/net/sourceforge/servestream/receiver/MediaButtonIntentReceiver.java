@@ -17,6 +17,8 @@
 
 package net.sourceforge.servestream.receiver;
 
+import net.sourceforge.servestream.utils.ServiceStarter;
+
 import net.sourceforge.servestream.service.MediaPlaybackService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -52,7 +54,7 @@ public class MediaButtonIntentReceiver extends BroadcastReceiver {
             Intent i = new Intent(context, MediaPlaybackService.class);
             i.setAction(MediaPlaybackService.SERVICECMD);
             i.putExtra(MediaPlaybackService.CMDNAME, MediaPlaybackService.CMDPAUSE);
-            context.startService(i);
+            ServiceStarter.startServiceSafely(context, i);
         } else if (Intent.ACTION_MEDIA_BUTTON.equals(intentAction)) {
             KeyEvent event = (KeyEvent)
                     intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
@@ -106,11 +108,11 @@ public class MediaButtonIntentReceiver extends BroadcastReceiver {
                         if (keycode == KeyEvent.KEYCODE_HEADSETHOOK &&
                                 eventtime - mLastClickTime < 300) {
                             i.putExtra(MediaPlaybackService.CMDNAME, MediaPlaybackService.CMDNEXT);
-                            context.startService(i);
+                            ServiceStarter.startServiceSafely(context, i);
                             mLastClickTime = 0;
                         } else {
                             i.putExtra(MediaPlaybackService.CMDNAME, command);
-                            context.startService(i);
+                            ServiceStarter.startServiceSafely(context, i);
                             mLastClickTime = eventtime;
                         }
                     }

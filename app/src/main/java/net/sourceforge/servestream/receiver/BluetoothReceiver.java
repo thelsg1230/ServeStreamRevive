@@ -17,6 +17,8 @@
 
 package net.sourceforge.servestream.receiver;
 
+import net.sourceforge.servestream.utils.ServiceStarter;
+
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -65,7 +67,7 @@ public class BluetoothReceiver extends BroadcastReceiver {
 		            Intent service = new Intent(MediaPlaybackService.BLUETOOTH_DEVICE_PAIRED);
 		            service.setComponent(serviceName);
 		            service.putExtra("uri", uri);
-		    		context.startService(service);
+		    		ServiceStarter.startServiceSafely(context, service);
 		    		break;
 		    	}
 		    }

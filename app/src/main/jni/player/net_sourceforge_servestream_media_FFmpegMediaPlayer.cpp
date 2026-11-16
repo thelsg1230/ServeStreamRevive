@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <stdint.h>
 #include "jni.h"
 #include "Errors.h"  // for int
 
@@ -293,21 +294,21 @@ int JNIMediaPlayerListener::setAuxEffectSendLevel(float level)
 static MediaPlayer* getMediaPlayer(JNIEnv* env, jobject thiz)
 {
     //Mutex::Autolock l(sLock);
-    MediaPlayer* const p = (MediaPlayer*)env->GetIntField(thiz, fields.context);
+    MediaPlayer* const p = (MediaPlayer*)env->GetLongField(thiz, fields.context);
     return p;
 }
 
-static MediaPlayer* setMediaPlayer(JNIEnv* env, jobject thiz, int mp)
+static MediaPlayer* setMediaPlayer(JNIEnv* env, jobject thiz, jlong mp)
 {
     //Mutex::Autolock l(sLock);
-    MediaPlayer* old = (MediaPlayer*)env->GetIntField(thiz, fields.context);
+    MediaPlayer* old = (MediaPlayer*)env->GetLongField(thiz, fields.context);
     /*if (player.get()) {
         player->incStrong((void*)setMediaPlayer);
     }
     if (old != 0) {
         old->decStrong((void*)setMediaPlayer);
     }*/
-    env->SetIntField(thiz, fields.context, mp);
+    env->SetLongField(thiz, fields.context, mp);
     return old;
 }
 
@@ -364,7 +365,7 @@ net_sourceforge_servestream_media_FFmpegMediaPlayer_setDataSourceAndHeaders(
     
     // Workaround for FFmpeg ticket #998
     // "must convert mms://... streams to mmsh://... for FFmpeg to work"
-    char *restrict_to = strstr(tmp, "mms://");
+    char *restrict_to = (char *) strstr(tmp, "mms://");
     if (restrict_to) {
     	strncpy(restrict_to, "mmsh://", 6);
     	puts(tmp);
@@ -495,7 +496,7 @@ setVideoSurface(JNIEnv *env, jobject thiz, jobject jsurface, jboolean mediaPlaye
         }
     }
 
-    env->SetIntField(thiz, fields.surface_texture, (int)new_st.get());
+    env->SetLongField(thiz, fields.surface_texture, (jlong)(intptr_t)new_st.get());
 
     // This will fail if the media player has not been initialized yet. This
     // can be the case if setDisplay() on MediaPlayer.java has been called
@@ -839,7 +840,7 @@ net_sourceforge_servestream_media_FFmpegMediaPlayer_native_init(JNIEnv *env)
         return;
     }
 
-    fields.context = env->GetFieldID(clazz, "mNativeContext", "I");
+    fields.context = env->GetFieldID(clazz, "mNativeContext", "J");
     if (fields.context == NULL) {
         return;
     }
@@ -880,7 +881,7 @@ net_sourceforge_servestream_media_FFmpegMediaPlayer_native_init(JNIEnv *env)
         return;
     }
     
-    fields.surface_texture = env->GetFieldID(clazz, "mNativeSurfaceTexture", "I");
+    fields.surface_texture = env->GetFieldID(clazz, "mNativeSurfaceTexture", "J");
     if (fields.surface_texture == NULL) {
         return;
     }
@@ -905,7 +906,7 @@ net_sourceforge_servestream_media_FFmpegMediaPlayer_native_setup(JNIEnv *env, jo
     mp->setListener(listener);
 
     // Stow our new C++ MediaPlayer in an opaque field in the Java object.
-    setMediaPlayer(env, thiz, (int)mp);
+    setMediaPlayer(env, thiz, (jlong)(intptr_t)mp);
 }
 
 static void

@@ -17,6 +17,8 @@
 
 package net.sourceforge.servestream.alarm;
 
+import net.sourceforge.servestream.utils.ServiceStarter;
+
 import net.sourceforge.servestream.R;
 import net.sourceforge.servestream.activity.SetAlarmActivity;
 import android.app.KeyguardManager;
@@ -118,7 +120,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         // Play the alarm alert and vibrate the device.
         Intent playAlarm = new Intent(Alarms.ALARM_ALERT_ACTION);
         playAlarm.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
-        context.startService(playAlarm);
+        ServiceStarter.startServiceSafely(context, playAlarm);
 
         // Trigger a notification that, when clicked, will show the alarm alert
         // dialog. No need to check for fullscreen since this will always be

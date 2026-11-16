@@ -3,8 +3,6 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
 
-    flavorDimensions "default"
-
     def mkfile = "NDK_APPLICATION_MK=Application.mk"
 
     defaultConfig {
@@ -13,6 +11,9 @@ android {
         targetSdkVersion 27
         versionName "0.7.3"
         versionCode 114
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+        }
     }
 
     lintOptions {
@@ -66,58 +67,6 @@ android {
         compileTask -> compileTask.dependsOn buildNative
     }
 
-    splits {
-        abi {
-            enable true
-            reset()
-            include 'arm64-v8a', 'armeabi-v7a', 'x86'
-            universalApk true
-        }
-    }
-
-    productFlavors {
-        regular {
-            ndk {
-
-            }
-        }
-        fat {
-            ndk {
-                abiFilters "arm64-v8a", "armeabi-v7a", "x86"
-            }
-        }
-        arm {
-            ndk {
-                abiFilter "armeabi"
-            }
-        }
-        armv7a {
-            ndk {
-                abiFilter "armeabi-v7a"
-            }
-        }
-        mips {
-            ndk {
-                abiFilter "mips"
-            }
-        }
-        x86 {
-            ndk {
-                abiFilter "x86"
-            }
-        }
-    }
-
-    Map<String, Integer> versionCodes = ['arm64-v8a': 118, 'armeabi-v7a': 115, x86: 117]
-
-    android.applicationVariants.all { variant ->
-        // assign different version code for each output
-        variant.outputs.each { output ->
-            int abiVersionCode = versionCodes.get(output.getFilter(com.android.build.OutputFile.ABI)) ?: 0
-            output.versionCodeOverride = abiVersionCode + 0
-            // android.defaultConfig.versionCode
-        }
-    }
 }
 
 dependencies {
