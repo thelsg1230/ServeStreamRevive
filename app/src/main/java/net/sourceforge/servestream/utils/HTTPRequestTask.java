@@ -62,7 +62,9 @@ public class HTTPRequestTask implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
-			transport.close();
+			if (transport != null) {
+				transport.close();
+			}
 		}
 		
 		return contentType;

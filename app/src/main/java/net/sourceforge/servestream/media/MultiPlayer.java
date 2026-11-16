@@ -20,6 +20,8 @@ package net.sourceforge.servestream.media;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.os.Looper;
+import android.widget.Toast;
 import android.os.Message;
 import android.util.Log;
 
@@ -58,8 +60,21 @@ public final class MultiPlayer implements HTTPRequestListener {
     	
     }
 
-    public MultiPlayer(Context context) {
+    private Context mContext;
 
+    public MultiPlayer(Context context) {
+        mContext = context == null ? null : context.getApplicationContext();
+    }
+
+    private void debugToast(final String message) {
+        if (mContext == null) {
+            return;
+        }
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            public void run() {
+                Toast.makeText(mContext, message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
     
     public void setDataSource(Context context, long id) {
@@ -181,6 +196,7 @@ public final class MultiPlayer implements HTTPRequestListener {
         public boolean onError(AbstractMediaPlayer mp, int what, int extra) {
         	Log.i(TAG, "onErrorListener called");
         	Log.d(TAG, "Error: " + what + "," + extra);
+        	debugToast("Player error " + what + "," + extra);
         	
             switch (what) {
             	case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
@@ -299,12 +315,19 @@ public final class MultiPlayer implements HTTPRequestListener {
 				contentType.equals("audio/3gpp2")) {
 			useFFmpegPlayer = true;
 		}
-		
+
+		// the bundled FFmpeg has no TLS support, so https streams must use the platform player
+		if (useFFmpegPlayer && path.startsWith(HTTPS.getProtocolName())) {
+			useFFmpegPlayer = false;
+		}
+
+		debugToast("Content-Type: " + contentType + " (" + (useFFmpegPlayer ? "FFmpeg" : "system") + " player)");
 		setDataSource(null, path, -1, false, useFFmpegPlayer, contentType);
 	}
 
 	@Override
 	public void onHTTPRequestError(String path, boolean useFFmpegPlayer) {
+		debugToast("Could not read the stream content type");
 		setDataSource(null, path, -1, false, useFFmpegPlayer, "");
 	}
 	
