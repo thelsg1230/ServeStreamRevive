@@ -316,11 +316,6 @@ public final class MultiPlayer implements HTTPRequestListener {
 			useFFmpegPlayer = true;
 		}
 
-		// the bundled FFmpeg has no TLS support, so https streams must use the platform player
-		if (useFFmpegPlayer && path.startsWith(HTTPS.getProtocolName())) {
-			useFFmpegPlayer = false;
-		}
-
 		debugToast("Content-Type: " + contentType + " (" + (useFFmpegPlayer ? "FFmpeg" : "system") + " player)");
 		setDataSource(null, path, -1, false, useFFmpegPlayer, contentType);
 	}
