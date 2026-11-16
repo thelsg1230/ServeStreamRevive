@@ -129,6 +129,11 @@ public final class MultiPlayer implements HTTPRequestListener {
         	Log.v(TAG, "Error initializing media player");
             mIsInitialized = false;
             sendErrorMessage(0);
+        } catch (IllegalStateException ex) {
+        	Log.v(TAG, "Error initializing media player");
+        	debugToast("Player init error: " + ex);
+            mIsInitialized = false;
+            sendErrorMessage(0);
         } catch (IllegalArgumentException ex) {
         	Log.v(TAG, "Error initializing media player");
             mIsInitialized = false;

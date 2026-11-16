@@ -79,6 +79,9 @@ public class MainActivity extends AppCompatActivity implements
 		//setTheme(UserPreferences.getTheme());
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		if (savedInstanceState == null) {
+			net.sourceforge.servestream.utils.CrashReporter.showIfAny(this);
+		}
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 

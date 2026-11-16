@@ -221,7 +221,8 @@ void JNIMediaPlayerListener::writeAudio(int16_t *samples, int frameSizePtr, int 
 		isAttached = 1;
 	}
 	
-	memcpy(mAudioFrameRefBuffer, samples, frameSizePtr);
+	// ART may hand out a copy from GetByteArrayElements, so write into the Java array directly
+	env->SetByteArrayRegion(mAudioFrameRef, 0, frameSizePtr, (const jbyte *) samples);
 	env->CallVoidMethod(mThiz, fields.write_audio, frameSizePtr);
 	
     if (env->ExceptionCheck()) {

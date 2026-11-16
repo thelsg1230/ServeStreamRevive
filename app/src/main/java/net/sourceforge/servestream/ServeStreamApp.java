@@ -26,6 +26,7 @@ public class ServeStreamApp extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		net.sourceforge.servestream.utils.CrashReporter.install(this);
 		UserPreferences.createInstance(this);
 	}
 }

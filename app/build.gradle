@@ -26,6 +26,11 @@ android {
     }
 
     buildTypes {
+        debug {
+            // non-debuggable build: ART CheckJNI stays off, like the original release APK
+            debuggable false
+            jniDebuggable false
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
