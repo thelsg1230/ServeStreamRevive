@@ -27,7 +27,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+// unistd.h declares pause(void), which clashes with the player's pause(State **)
+#define pause unistd_pause_unused
 #include <unistd.h>
+#undef pause
 
 const char *DURATION = "duration";
 const char *AUDIO_CODEC = "audio_codec";
