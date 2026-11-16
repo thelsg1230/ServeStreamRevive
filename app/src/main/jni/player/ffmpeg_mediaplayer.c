@@ -539,6 +539,8 @@ int player_prepare(State **ps, int from_thread)
 
     AVDictionary *options = NULL;
     av_dict_set(&options, "user-agent", "FFmpegMediaPlayer", 0);
+    av_dict_set(&options, "rw_timeout", "15000000", 0);
+    av_dict_set(&options, "reconnect", "1", 0);
     
     if (state->headers[0]) {
     	av_dict_set(&options, "headers", state->headers, 0);
@@ -552,15 +554,16 @@ int player_prepare(State **ps, int from_thread)
     int open_ret = avformat_open_input(&state->pFormatCtx, state->filename, NULL, &options);
     av_dict_free(&options);
     if (open_ret != 0) {
-	    printf("Input file could not be opened\n");
-		*ps = NULL;
+	    __android_log_print(ANDROID_LOG_ERROR, "TAG", "avformat_open_input failed: %d", open_ret);
+	    state->notify_callback(state->clazz, MEDIA_ERROR, MEDIA_ERROR_UNKNOWN, open_ret, from_thread);
     	return FAILURE;
     }
 
-	if (avformat_find_stream_info(state->pFormatCtx, NULL) < 0) {
-	    printf("Stream information could not be retrieved\n");
+	int info_ret = avformat_find_stream_info(state->pFormatCtx, NULL);
+	if (info_ret < 0) {
+	    __android_log_print(ANDROID_LOG_ERROR, "TAG", "avformat_find_stream_info failed: %d", info_ret);
 	    avformat_close_input(&state->pFormatCtx);
-		*ps = NULL;
+	    state->notify_callback(state->clazz, MEDIA_ERROR, MEDIA_ERROR_UNKNOWN, info_ret, from_thread);
     	return FAILURE;
 	}
 
@@ -589,9 +592,11 @@ int player_prepare(State **ps, int from_thread)
 		stream_component_open(state, video_index, from_thread);
 	}
 
-	if (state->video_stream < 0 && state->audio_stream < 0) {
+	if (state->audio_stream < 0) {
+	    __android_log_print(ANDROID_LOG_ERROR, "TAG", "no playable audio stream");
 	    avformat_close_input(&state->pFormatCtx);
-		*ps = NULL;
+	    close_audio(state);
+	    state->notify_callback(state->clazz, MEDIA_ERROR, MEDIA_ERROR_UNKNOWN, -1, from_thread);
 		return FAILURE;
 	}
 

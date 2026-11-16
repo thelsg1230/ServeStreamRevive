@@ -52,6 +52,8 @@ public final class MultiPlayer implements HTTPRequestListener {
 	private FFmpegMediaPlayer mFFmpegMediaPlayer;
 	private AbstractMediaPlayer mMediaPlayer = mNativeMediaPlayer;
     private boolean mIsInitialized = false;
+    private String mStreamPath = null;
+    private boolean mFallbackTried = false;
 
     /**
      * Default constructor
@@ -82,6 +84,8 @@ public final class MultiPlayer implements HTTPRequestListener {
     }
     
     public void setDataSource(String path, boolean useFFmpegPlayer) {
+    	mStreamPath = path;
+    	mFallbackTried = false;
     	setDataSource(null, path, -1, false, useFFmpegPlayer, null);
     }
     
@@ -196,7 +200,22 @@ public final class MultiPlayer implements HTTPRequestListener {
         public boolean onError(AbstractMediaPlayer mp, int what, int extra) {
         	Log.i(TAG, "onErrorListener called");
         	Log.d(TAG, "Error: " + what + "," + extra);
-        	debugToast("Player error " + what + "," + extra);
+        	final boolean wasFFmpeg = mp instanceof FFmpegMediaPlayer;
+        	debugToast("Player error " + what + "," + extra + " (" + (wasFFmpeg ? "FFmpeg" : "system") + " player)");
+        	
+        	// Retry a failed network stream once with the other player
+        	if (!mFallbackTried && mStreamPath != null &&
+        			(mStreamPath.startsWith(HTTP.getProtocolName()) || mStreamPath.startsWith(HTTPS.getProtocolName()))) {
+        		mFallbackTried = true;
+        		final String path = mStreamPath;
+        		debugToast("Retrying with " + (wasFFmpeg ? "system" : "FFmpeg") + " player");
+        		new Handler(Looper.getMainLooper()).post(new Runnable() {
+        			public void run() {
+        				setDataSource(null, path, -1, false, !wasFFmpeg, "fallback");
+        			}
+        		});
+        		return true;
+        	}
         	
             switch (what) {
             	case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
