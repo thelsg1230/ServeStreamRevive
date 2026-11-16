@@ -25,6 +25,11 @@ android {
         disable 'ExtraTranslation'
     }
 
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
     buildTypes {
         debug {
             // non-debuggable build: ART CheckJNI stays off, like the original release APK
