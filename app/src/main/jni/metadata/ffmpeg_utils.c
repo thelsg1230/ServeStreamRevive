@@ -24,6 +24,10 @@
 #include <ffmpeg_utils.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
+#include <math.h>
 
 void set_shoutcast_metadata(AVFormatContext *ic) {
     char *value = NULL;
@@ -52,13 +56,13 @@ void set_duration(AVFormatContext *ic) {
 }
 
 void set_codec(AVFormatContext *ic, int i) {
-    const char *codec_type = av_get_media_type_string(ic->streams[i]->codec->codec_type);
+    const char *codec_type = av_get_media_type_string(ic->streams[i]->codecpar->codec_type);
 
 	if (!codec_type) {
 		return;
 	}
 
-    const char *codec_name = avcodec_get_name(ic->streams[i]->codec->codec_id);
+    const char *codec_name = avcodec_get_name(ic->streams[i]->codecpar->codec_id);
 
 	if (strcmp(codec_type, "audio") == 0) {
 		av_dict_set(&ic->metadata, AUDIO_CODEC, codec_name, 0);
@@ -123,10 +127,10 @@ void set_video_dimensions(AVFormatContext *ic, AVStream *video_st) {
 	char value[30] = "0";
 
 	if (video_st) {
-		sprintf(value, "%d", video_st->codec->width);
+		sprintf(value, "%d", video_st->codecpar->width);
 	    av_dict_set(&ic->metadata, VIDEO_WIDTH, value, 0);
 
-		sprintf(value, "%d", video_st->codec->height);
+		sprintf(value, "%d", video_st->codecpar->height);
 	    av_dict_set(&ic->metadata, VIDEO_HEIGHT, value, 0);
 	}
 }
@@ -186,13 +190,13 @@ const char* extract_metadata_from_chapter_internal(AVFormatContext *ic, AVStream
 		char time[30];
 		int start_time = ch->start * av_q2d(ch->time_base) * 1000;
 		sprintf(time, "%d", start_time);
-		value = malloc(strlen(time));
+		value = malloc(strlen(time) + 1);
 		sprintf(value, "%s", time);
 	} else if (strcmp(key, CHAPTER_END_TIME) == 0) {
 		char time[30];
 		int end_time = ch->end * av_q2d(ch->time_base) * 1000;
 		sprintf(time, "%d", end_time);
-		value = malloc(strlen(time));
+		value = malloc(strlen(time) + 1);
 		sprintf(value, "%s", time);
 	} else if (av_dict_get(ch->metadata, key, NULL, AV_DICT_MATCH_CASE)) {
 		value = av_dict_get(ch->metadata, key, NULL, AV_DICT_MATCH_CASE)->value;

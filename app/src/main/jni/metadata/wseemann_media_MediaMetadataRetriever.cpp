@@ -21,6 +21,7 @@
 #define LOG_TAG "MediaMetadataRetrieverJNI"
 
 #include <assert.h>
+#include <string.h>
 #include <android/log.h>
 #include <mediametadataretriever.h>
 #include "jni.h"
@@ -251,7 +252,7 @@ static jbyteArray wseemann_media_FFmpegMediaMetadataRetriever_getFrameAtTime(JNI
    }
 
    AVPacket packet;
-   av_init_packet(&packet);
+   memset(&packet, 0, sizeof(packet));
    jbyteArray array = NULL;
 
    if (retriever->getFrameAtTime(timeUs, option, &packet) == 0) {
@@ -285,7 +286,7 @@ static jbyteArray wseemann_media_FFmpegMediaMetadataRetriever_getScaledFrameAtTi
     }
     
     AVPacket packet;
-    av_init_packet(&packet);
+    memset(&packet, 0, sizeof(packet));
     jbyteArray array = NULL;
     
     if (retriever->getScaledFrameAtTime(timeUs, option, &packet, width, height) == 0) {
@@ -319,7 +320,7 @@ static jbyteArray wseemann_media_FFmpegMediaMetadataRetriever_getEmbeddedPicture
    }
 
    AVPacket packet;
-   av_init_packet(&packet);
+   memset(&packet, 0, sizeof(packet));
    jbyteArray array = NULL;
 
    if (retriever->extractAlbumArt(&packet) == 0) {
@@ -428,11 +429,11 @@ wseemann_media_FFmpegMediaMetadataRetriever_getMetadata(JNIEnv *env, jobject thi
         jobject map = env->NewObject(hashMap_Clazz, gHashMap_initMethodID);
         jmethodID gHashMap_putMethodID = env->GetMethodID(hashMap_Clazz, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         
-        int i = 0;
+        const AVDictionaryEntry *entry = NULL;
         
-        for (i = 0; i < metadata->count; i++) {
-            jstring jKey = NewStringUTF(env, metadata->elems[i].key);
-            jstring jValue = NewStringUTF(env, metadata->elems[i].value);
+        while (metadata && (entry = av_dict_iterate(metadata, entry))) {
+            jstring jKey = NewStringUTF(env, entry->key);
+            jstring jValue = NewStringUTF(env, entry->value);
             (jobject) env->CallObjectMethod(map, gHashMap_putMethodID, jKey, jValue);
             env->DeleteLocalRef(jKey);
             env->DeleteLocalRef(jValue);
@@ -496,8 +497,7 @@ static void wseemann_media_FFmpegMediaMetadataRetriever_native_init(JNIEnv *env,
         return;
     }
 
-    // Initialize libavformat and register all the muxers, demuxers and protocols.
-	av_register_all();
+    // Initialize network support for libavformat.
 	avformat_network_init();
 }
 

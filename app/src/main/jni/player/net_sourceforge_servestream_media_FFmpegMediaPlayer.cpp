@@ -886,8 +886,7 @@ net_sourceforge_servestream_media_FFmpegMediaPlayer_native_init(JNIEnv *env)
         return;
     }
 
-    // Initialize libavformat and register all the muxers, demuxers and protocols.
-    av_register_all();
+    // Initialize network support for libavformat.
     avformat_network_init();
 }
 

@@ -21,6 +21,7 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
 #include <pthread.h>
 
 #define AUDIO_DATA_ID 1
@@ -61,6 +62,13 @@ typedef struct State {
 	AVStream *audio_st;
 	AVStream *video_st;
 	int buffer_size;
+	AVCodecContext *audio_codec_ctx;
+	struct SwrContext *swr_ctx;
+	int swr_in_fmt;
+	int swr_in_rate;
+	int swr_in_channels;
+	int swr_out_channels;
+	int decoder_started;
 	int loop;
 
 	pthread_t decoder_thread;

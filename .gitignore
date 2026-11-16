@@ -11,3 +11,9 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+
+# generated native build output
+app/src/main/ffmpeg/build/
+app/src/main/jni/ffmpeg/ffmpeg/
+app/src/main/libs/
+app/src/main/obj/

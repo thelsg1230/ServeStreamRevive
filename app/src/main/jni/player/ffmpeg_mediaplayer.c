@@ -25,6 +25,9 @@
 #include <android/log.h>
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 const char *DURATION = "duration";
 const char *AUDIO_CODEC = "audio_codec";
@@ -35,7 +38,21 @@ const char *TITLE = "title";
 const int SUCCESS = 0;
 const int FAILURE = -1;
 
-static pthread_mutex_t *lock;
+static pthread_mutex_t lock_storage = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t *lock = &lock_storage;
+
+static void close_audio(State *state)
+{
+	if (state->audio_codec_ctx) {
+		avcodec_free_context(&state->audio_codec_ctx);
+	}
+	if (state->swr_ctx) {
+		swr_free(&state->swr_ctx);
+	}
+	state->swr_in_fmt = -1;
+	state->swr_in_rate = 0;
+	state->swr_in_channels = 0;
+}
 
 int decode_interrupt_cb(void *opaque) {
 	State *state = (State *) opaque;
@@ -66,6 +83,7 @@ void clear_l(State **ps)
 		if (state->pFormatCtx) {
 			avformat_close_input(&state->pFormatCtx);
 	    }
+		close_audio(state);
 	}
 	
 	if (state && state->fd != -1) {
@@ -85,6 +103,7 @@ void clear_l(State **ps)
 	state->headers[0] = '\0';
 	state->fd = -1;
 	state->offset = 0;
+	state->decoder_started = 0;
 }
 
 void disconnect(State **ps)
@@ -141,16 +160,16 @@ int setDataSourceURI(State **ps, const char *url, const char *headers)
 
     // Workaround for FFmpeg ticket #998
     // "must convert mms://... streams to mmsh://... for FFmpeg to work"
-    char *restrict_to = strstr(url, "mms://");
-    if (restrict_to) {
-    	strncpy(restrict_to, "mmsh://", 6);
-    	puts(url);
+    if (strncmp(url, "mms://", 6) == 0) {
+    	snprintf(state->filename, sizeof(state->filename), "mmsh://%s", url + 6);
+    } else {
+    	strncpy(state->filename, url, sizeof(state->filename) - 1);
+    	state->filename[sizeof(state->filename) - 1] = '\0';
     }
 
-    strncpy(state->filename, url, sizeof(state->filename));
-
     if (headers) {
-        strncpy(state->headers, headers, sizeof(state->headers));
+        strncpy(state->headers, headers, sizeof(state->headers) - 1);
+        state->headers[sizeof(state->headers) - 1] = '\0';
     }
     
     return SUCCESS;
@@ -203,13 +222,13 @@ void get_duration(AVFormatContext *ic, char * value)
 
 void set_codec(AVFormatContext *ic, int i)
 {
-    const char *codec_type = av_get_media_type_string(ic->streams[i]->codec->codec_type);
+    const char *codec_type = av_get_media_type_string(ic->streams[i]->codecpar->codec_type);
 
 	if (!codec_type) {
 		return;
 	}
 
-    const char *codec_name = avcodec_get_name(ic->streams[i]->codec->codec_id);
+    const char *codec_name = avcodec_get_name(ic->streams[i]->codecpar->codec_id);
 
 	if (strcmp(codec_type, "audio") == 0) {
 		av_dict_set(&ic->metadata, AUDIO_CODEC, codec_name, 0);
@@ -242,187 +261,130 @@ int get_metadata(State **ps, const char* key, char** value)
     return 0;
 }*/
 
-int decode_frame_from_packet(State *state, AVPacket *aPacket, int *frame_size_ptr, int from_thread)
+static int ensure_swr(State *state, AVFrame *frame)
 {
-	int n;
-	int16_t *samples;
-	AVPacket *pkt = aPacket;
-    AVFrame *decoded_frame = NULL;
-    int got_frame = 0;
-    
-	int64_t src_ch_layout, dst_ch_layout;
-	int src_rate, dst_rate;
-	uint8_t **src_data = NULL, **dst_data = NULL;
-	int src_nb_channels = 0, dst_nb_channels = 0;
-	int src_linesize, dst_linesize;
-	int src_nb_samples, dst_nb_samples, max_dst_nb_samples;
-	enum AVSampleFormat src_sample_fmt, dst_sample_fmt;
-	int dst_bufsize;
-	const char *fmt;
-	struct SwrContext *swr_ctx;
-	double t;
-    int ret;
+	int in_ch = frame->ch_layout.nb_channels;
 
-    if (aPacket->stream_index == state->audio_stream) {
-        	
-    	if (!decoded_frame) {
-    		if (!(decoded_frame = av_frame_alloc())) {
-    			__android_log_print(ANDROID_LOG_INFO, "TAG", "Could not allocate audio frame\n");
-    	        return -2;
-    		}
-    	}
-    	
-    	if (avcodec_decode_audio4(state->audio_st->codec, decoded_frame, &got_frame, aPacket) < 0) {
-    		__android_log_print(ANDROID_LOG_ERROR, "TAG", "avcodec_decode_audio4() decoded no frame");
-    		return -2;
-    	}
-    	
-    	int data_size = 0;
-    	
-    	if (got_frame) {
-    		/* if a frame has been decoded, output it */
-    		data_size = av_samples_get_buffer_size(NULL, state->audio_st->codec->channels,
-    	    		decoded_frame->nb_samples,
-    	    		state->audio_st->codec->sample_fmt, 1);
-    	} else {
-    		*frame_size_ptr = 0;
-    	    return 0;
-    	}
-    	
-        if (decoded_frame->format != AV_SAMPLE_FMT_S16) {
-            src_nb_samples = decoded_frame->nb_samples;
-            src_linesize = (int) decoded_frame->linesize;
-            src_data = decoded_frame->data;
-            
-            if (decoded_frame->channel_layout == 0) {
-            	decoded_frame->channel_layout = av_get_default_channel_layout(decoded_frame->channels);
-            }
-            
-            /* create resampler context */
-            swr_ctx = swr_alloc();
-            if (!swr_ctx) {
-            	//fprintf(stderr, "Could not allocate resampler context\n");
-                //ret = AVERROR(ENOMEM);
-                //goto end;
-            }
-            
-            src_rate = decoded_frame->sample_rate;
-            dst_rate = decoded_frame->sample_rate;
-            src_ch_layout = decoded_frame->channel_layout;
-            dst_ch_layout = decoded_frame->channel_layout;
-            src_sample_fmt = decoded_frame->format;
-            dst_sample_fmt = AV_SAMPLE_FMT_S16;
-            
-            av_opt_set_int(swr_ctx, "in_channel_layout", src_ch_layout, 0);
-            av_opt_set_int(swr_ctx, "out_channel_layout", dst_ch_layout,  0);
-            av_opt_set_int(swr_ctx, "in_sample_rate", src_rate, 0);
-            av_opt_set_int(swr_ctx, "out_sample_rate", dst_rate, 0);
-            av_opt_set_sample_fmt(swr_ctx, "in_sample_fmt", src_sample_fmt, 0);
-            av_opt_set_sample_fmt(swr_ctx, "out_sample_fmt", dst_sample_fmt,  0);
-            
-            /* initialize the resampling context */
-            if ((ret = swr_init(swr_ctx)) < 0) {
-            	__android_log_print(ANDROID_LOG_INFO, "TAG", "Failed to initialize the resampling context\n");
-            	//goto end;
-            }
+	if (state->swr_ctx && state->swr_in_fmt == frame->format &&
+			state->swr_in_rate == frame->sample_rate && state->swr_in_channels == in_ch) {
+		return 0;
+	}
 
-            /* allocate source and destination samples buffers */
+	if (state->swr_ctx) {
+		swr_free(&state->swr_ctx);
+	}
 
-            src_nb_channels = av_get_channel_layout_nb_channels(src_ch_layout);
-            ret = av_samples_alloc_array_and_samples(&src_data, &src_linesize, src_nb_channels,
-            		src_nb_samples, src_sample_fmt, 0);
-            if (ret < 0) {
-            	__android_log_print(ANDROID_LOG_INFO, "TAG", "Could not allocate source samples\n");
-            	//goto end;
-            }
+	AVChannelLayout in_layout, out_layout;
+	memset(&in_layout, 0, sizeof(in_layout));
+	memset(&out_layout, 0, sizeof(out_layout));
 
-            /* compute the number of converted samples: buffering is avoided
-             * ensuring that the output buffer will contain at least all the
-             * converted input samples */
-            max_dst_nb_samples = dst_nb_samples =
-            	av_rescale_rnd(src_nb_samples, dst_rate, src_rate, AV_ROUND_UP);
+	if (frame->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC) {
+		av_channel_layout_default(&in_layout, in_ch);
+	} else if (av_channel_layout_copy(&in_layout, &frame->ch_layout) < 0) {
+		return -1;
+	}
 
-            /* buffer is going to be directly written to a rawaudio file, no alignment */
-            dst_nb_channels = av_get_channel_layout_nb_channels(dst_ch_layout);
-            ret = av_samples_alloc_array_and_samples(&dst_data, &dst_linesize, dst_nb_channels,
-            		dst_nb_samples, dst_sample_fmt, 0);
-            if (ret < 0) {
-            	__android_log_print(ANDROID_LOG_INFO, "TAG", "Could not allocate destination samples\n");
-            	//goto end;
-            }
-            
-            /* compute destination number of samples */
-            dst_nb_samples = av_rescale_rnd(swr_get_delay(swr_ctx, src_rate) +
-                                            src_nb_samples, dst_rate, src_rate, AV_ROUND_UP);
-            
-            /* convert to destination format */
-            ret = swr_convert(swr_ctx, dst_data, dst_nb_samples, (const uint8_t **)decoded_frame->data, src_nb_samples);
-            if (ret < 0) {
-            	__android_log_print(ANDROID_LOG_INFO, "TAG", "Error while converting\n");
-                //goto end;
-            }
-            dst_bufsize = av_samples_get_buffer_size(&dst_linesize, dst_nb_channels,
-                                                     ret, dst_sample_fmt, 1);
-            if (dst_bufsize < 0) {
-                fprintf(stderr, "Could not get sample buffer size\n");
-                //goto end;
-            }
-            
-            samples = malloc(dst_bufsize);
-    		memcpy(samples, dst_data[0], dst_bufsize);
-    		data_size = dst_bufsize;
+	av_channel_layout_default(&out_layout, state->swr_out_channels > 0 ? state->swr_out_channels : (in_ch > 2 ? 2 : in_ch));
 
-    		if (src_data) {
-    			av_freep(&src_data[0]);
-    		}
-    		av_freep(&src_data);
+	int ret = swr_alloc_set_opts2(&state->swr_ctx, &out_layout, AV_SAMPLE_FMT_S16, frame->sample_rate,
+			&in_layout, (enum AVSampleFormat) frame->format, frame->sample_rate, 0, NULL);
+	av_channel_layout_uninit(&in_layout);
+	av_channel_layout_uninit(&out_layout);
 
-    		if (dst_data) {
-    			av_freep(&dst_data[0]);
-    		}
-    		av_freep(&dst_data);
+	if (ret < 0 || !state->swr_ctx || swr_init(state->swr_ctx) < 0) {
+		__android_log_print(ANDROID_LOG_ERROR, "TAG", "Failed to initialize the resampling context\n");
+		swr_free(&state->swr_ctx);
+		return -1;
+	}
 
-    		swr_free(&swr_ctx);
-    	} else {
-    		/* if a frame has been decoded, output it */
-    	    data_size = av_samples_get_buffer_size(NULL, state->audio_st->codec->channels,
-    	    		decoded_frame->nb_samples, state->audio_st->codec->sample_fmt, 1);
-    		samples = malloc(data_size);
-    		memcpy(samples, decoded_frame->data[0], data_size);
-    	}
-        
-        *frame_size_ptr = data_size;
-        
-        // TODO add this call back!
-        //*pts_ptr = pts;
-        n = 2 * state->audio_st->codec->channels;
-        state->audio_clock += (double)*frame_size_ptr /
-        		(double)(n * state->audio_st->codec->sample_rate);
-
-        /* if update, update the audio clock w/pts */
-        if(pkt->pts != AV_NOPTS_VALUE) {
-        	state->audio_clock = av_q2d(state->audio_st->time_base) * pkt->pts;
-        }
-    	
-        //*frame_size_ptr = data_size;
-        state->write_audio_callback(state->clazz, samples, data_size, from_thread);
-        
-    	av_frame_free(&decoded_frame);
-        
-        free(samples);
-        
-    	return AUDIO_DATA_ID;
-    }
-
-    return 0;
+	state->swr_in_fmt = frame->format;
+	state->swr_in_rate = frame->sample_rate;
+	state->swr_in_channels = in_ch;
+	return 0;
 }
 
-void player_decode(void *data)
+int decode_frame_from_packet(State *state, AVPacket *pkt, int *frame_size_ptr, int from_thread)
+{
+	int total = 0;
+	int ret;
+
+	*frame_size_ptr = 0;
+
+	if (!pkt || pkt->stream_index != state->audio_stream || !state->audio_codec_ctx) {
+		return 0;
+	}
+
+	ret = avcodec_send_packet(state->audio_codec_ctx, pkt);
+	if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
+		__android_log_print(ANDROID_LOG_ERROR, "TAG", "avcodec_send_packet() failed: %d", ret);
+		return -2;
+	}
+
+	AVFrame *frame = av_frame_alloc();
+	if (!frame) {
+		__android_log_print(ANDROID_LOG_INFO, "TAG", "Could not allocate audio frame\n");
+		return -2;
+	}
+
+	while (avcodec_receive_frame(state->audio_codec_ctx, frame) >= 0) {
+		uint8_t *samples = NULL;
+		int data_size = 0;
+		int out_ch = state->swr_out_channels > 0 ? state->swr_out_channels : frame->ch_layout.nb_channels;
+
+		if (frame->format == AV_SAMPLE_FMT_S16 && frame->ch_layout.nb_channels == out_ch) {
+			data_size = av_samples_get_buffer_size(NULL, out_ch, frame->nb_samples, AV_SAMPLE_FMT_S16, 1);
+			if (data_size > 0) {
+				samples = av_malloc(data_size);
+				if (samples) {
+					memcpy(samples, frame->data[0], data_size);
+				}
+			}
+		} else if (ensure_swr(state, frame) == 0) {
+			int max_out = swr_get_out_samples(state->swr_ctx, frame->nb_samples) + 256;
+			samples = av_malloc((size_t) max_out * out_ch * 2);
+			if (samples) {
+				int converted = swr_convert(state->swr_ctx, &samples, max_out,
+						(const uint8_t **) frame->extended_data, frame->nb_samples);
+				if (converted > 0) {
+					data_size = converted * out_ch * 2;
+				} else {
+					av_freep(&samples);
+				}
+			}
+		}
+
+		if (samples && data_size > 0) {
+			total += data_size;
+
+			state->audio_clock += (double) data_size / (double) (2 * out_ch * frame->sample_rate);
+			if (pkt->pts != AV_NOPTS_VALUE) {
+				state->audio_clock = av_q2d(state->audio_st->time_base) * pkt->pts;
+			}
+
+			state->write_audio_callback(state->clazz, (int16_t *) samples, data_size, from_thread);
+		}
+
+		av_freep(&samples);
+		av_frame_unref(frame);
+	}
+
+	av_frame_free(&frame);
+
+	*frame_size_ptr = total;
+	return total > 0 ? AUDIO_DATA_ID : 0;
+}
+
+void *player_decode(void *data)
 {
 	State *state = (State *) data;
 	
 	int ret;
 	int eof = 0;
+	AVPacket *packet = av_packet_alloc();
+
+	if (!packet) {
+		return NULL;
+	}
 
 	for (;;) {
 
@@ -446,10 +408,10 @@ void player_decode(void *data)
 
             ret = avformat_seek_file(state->pFormatCtx, -1, seek_min, seek_target, seek_max, state->seek_flags);
             if (ret < 0) {
-                fprintf(stderr, "%s: error while seeking\n", state->pFormatCtx->filename);
+                fprintf(stderr, "%s: error while seeking\n", state->pFormatCtx->url);
             } else {
-                if (state->audio_stream >= 0) {
-                	avcodec_flush_buffers(state->audio_st->codec);
+                if (state->audio_codec_ctx) {
+                	avcodec_flush_buffers(state->audio_codec_ctx);
                 }
                 state->notify_callback(state->clazz, MEDIA_SEEK_COMPLETE, 0, 0, FROM_THREAD);
             }
@@ -458,89 +420,95 @@ void player_decode(void *data)
         }
 
         if (state->paused) {
-        	goto sleep;
+        	usleep(10000);
+        	continue;
         }
 
-		AVPacket packet;
-		memset(&packet, 0, sizeof(packet)); //make sure we can safely free it
+		ret = av_read_frame(state->pFormatCtx, packet);
 
-		int i;
-			
-		for (i = 0; i < state->pFormatCtx->nb_streams; ++i) {
-			//av_init_packet(&packet);
-			ret = av_read_frame(state->pFormatCtx, &packet);
-
-	        if (ret < 0) {
-	            if (ret == AVERROR_EOF || url_feof(state->pFormatCtx->pb)) {
-	                eof = 1;
-	                break;
-	            }
-	        }
-
-	        int frame_size_ptr;
-			ret = decode_frame_from_packet(state, &packet, &frame_size_ptr, FROM_THREAD);
-			av_free_packet(&packet);
-
-			if (ret != 0) { //an error or a frame decoded
-				// TODO add this bacl=k
+		if (ret < 0) {
+			if (state->abort_request) {
+				break;
 			}
-		}
-
-		if (eof) {
+			if (ret == AVERROR(EAGAIN)) {
+				usleep(1000);
+				continue;
+			}
+			eof = 1;
 			break;
 		}
 
-		sleep:
-		    usleep(100);
+		int frame_size = 0;
+		decode_frame_from_packet(state, packet, &frame_size, FROM_THREAD);
+		av_packet_unref(packet);
 	}
 
-	if (eof) {
+	av_packet_free(&packet);
+
+	if (eof && !state->abort_request) {
 		state->notify_callback(state->clazz, MEDIA_PLAYBACK_COMPLETE, 0, 0, FROM_THREAD);
 	}
+
+	return NULL;
 }
 
 int stream_component_open(State *s, int stream_index, int from_thread)
 {
 	AVFormatContext *pFormatCtx = s->pFormatCtx;
-	AVCodecContext *codecCtx;
-	AVCodec *codec;
+	AVStream *stream;
+	const AVCodec *codec;
 
 	if (stream_index < 0 || stream_index >= pFormatCtx->nb_streams) {
 		return FAILURE;
 	}
 
-	// Get a pointer to the codec context for the stream
-	codecCtx = pFormatCtx->streams[stream_index]->codec;
+	stream = pFormatCtx->streams[stream_index];
 
-	printf("avcodec_find_decoder %s\n", codecCtx->codec_name);
+	if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+		s->video_stream = stream_index;
+		s->video_st = stream;
+		return SUCCESS;
+	}
 
-	// Find the decoder for the audio stream
-	codec = avcodec_find_decoder(codecCtx->codec_id);
+	if (stream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO) {
+		return SUCCESS;
+	}
 
-	if(codec == NULL) {
+	codec = avcodec_find_decoder(stream->codecpar->codec_id);
+
+	if (codec == NULL) {
 	    printf("avcodec_find_decoder() failed to find audio decoder\n");
 	    return FAILURE;
 	}
 
-	// Open the codec
-    if (!codec || (avcodec_open2(codecCtx, codec, NULL) < 0)) {
-	  	printf("avcodec_open2() failed\n");
+	AVCodecContext *codecCtx = avcodec_alloc_context3(codec);
+	if (!codecCtx) {
 		return FAILURE;
 	}
 
-	switch(codecCtx->codec_type) {
-		case AVMEDIA_TYPE_AUDIO:
-			s->audio_stream = stream_index;
-		    s->audio_st = pFormatCtx->streams[stream_index];
-	        s->buffer_size = (s->init_audio_track_callback(s->clazz, codecCtx->sample_rate, codecCtx->channels, from_thread));
-			break;
-		case AVMEDIA_TYPE_VIDEO:
-			s->video_stream = stream_index;
-		    s->video_st = pFormatCtx->streams[stream_index];
-			break;
-		default:
-			break;
+	if (avcodec_parameters_to_context(codecCtx, stream->codecpar) < 0) {
+		avcodec_free_context(&codecCtx);
+		return FAILURE;
 	}
+
+	codecCtx->pkt_timebase = stream->time_base;
+
+    if (avcodec_open2(codecCtx, codec, NULL) < 0) {
+	  	printf("avcodec_open2() failed\n");
+	  	avcodec_free_context(&codecCtx);
+		return FAILURE;
+	}
+
+	int channels = codecCtx->ch_layout.nb_channels;
+	if (channels <= 0) {
+		channels = 2;
+	}
+	s->swr_out_channels = channels > 2 ? 2 : channels;
+
+	s->audio_codec_ctx = codecCtx;
+	s->audio_stream = stream_index;
+    s->audio_st = stream;
+    s->buffer_size = (s->init_audio_track_callback(s->clazz, codecCtx->sample_rate, s->swr_out_channels, from_thread));
 
 	return SUCCESS;
 }
@@ -556,6 +524,7 @@ int player_prepare(State **ps, int from_thread)
 	if (state && state->pFormatCtx) {
 		avformat_close_input(&state->pFormatCtx);
 	}
+	close_audio(state);
 
 	state->pFormatCtx = NULL;
 	state->audio_stream = -1;
@@ -568,7 +537,7 @@ int player_prepare(State **ps, int from_thread)
     AVDictionary *options = NULL;
     av_dict_set(&options, "user-agent", "FFmpegMediaPlayer", 0);
     
-    if (state->headers) {
+    if (state->headers[0]) {
     	av_dict_set(&options, "headers", state->headers, 0);
     }
     
@@ -577,7 +546,9 @@ int player_prepare(State **ps, int from_thread)
         state->pFormatCtx->skip_initial_bytes = state->offset;
     }
     
-    if (avformat_open_input(&state->pFormatCtx, state->filename, NULL, &options) != 0) {
+    int open_ret = avformat_open_input(&state->pFormatCtx, state->filename, NULL, &options);
+    av_dict_free(&options);
+    if (open_ret != 0) {
 	    printf("Input file could not be opened\n");
 		*ps = NULL;
     	return FAILURE;
@@ -596,11 +567,11 @@ int player_prepare(State **ps, int from_thread)
 	
     // Find the first audio and video stream
 	for (i = 0; i < state->pFormatCtx->nb_streams; i++) {
-		if (state->pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO && video_index < 0) {
+		if (state->pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && video_index < 0) {
 			video_index = i;
 		}
 
-		if (state->pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO && audio_index < 0) {
+		if (state->pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO && audio_index < 0) {
 			audio_index = i;
 		}
 		
@@ -625,30 +596,24 @@ int player_prepare(State **ps, int from_thread)
 	state->pFormatCtx->interrupt_callback.opaque = state;
 	
     // fill the inital buffer
-	AVPacket packet;
-	memset(&packet, 0, sizeof(packet)); //make sure we can safely free it
-
-	int j, ret;
+	AVPacket *packet = av_packet_alloc();
+	int ret;
     int bytes_written = 0;
 	
-	while (bytes_written < state->buffer_size) {
-		for (j = 0; j < state->pFormatCtx->nb_streams; j++) {
-			//av_init_packet(&packet);
-			ret = av_read_frame(state->pFormatCtx, &packet);
+	while (packet && state->audio_stream >= 0 && bytes_written < state->buffer_size) {
+		ret = av_read_frame(state->pFormatCtx, packet);
 
-			if (ret < 0) {
-				if (ret == AVERROR_EOF || url_feof(state->pFormatCtx->pb)) {
-					//break;
-			    }
-			}
-
-			int frame_size_ptr = 0;
-			ret = decode_frame_from_packet(state, &packet, &frame_size_ptr, from_thread);
-		    __android_log_print(ANDROID_LOG_ERROR, "TAG", "Fill buffer: %d -> %d", frame_size_ptr, state->buffer_size);
-			bytes_written = bytes_written + frame_size_ptr;
-			av_free_packet(&packet);
+		if (ret < 0) {
+			break;
 		}
+
+		int frame_size_ptr = 0;
+		decode_frame_from_packet(state, packet, &frame_size_ptr, from_thread);
+		bytes_written = bytes_written + frame_size_ptr;
+		av_packet_unref(packet);
 	}
+
+	av_packet_free(&packet);
 		
 	*ps = state;
 
@@ -669,16 +634,18 @@ int prepare(State **ps)
     return SUCCESS;
 }
 
-void player_prepare_thread(void *data)
+void *player_prepare_thread(void *data)
 {
 	State ** ps = (State **) data;
 	player_prepare(ps, FROM_THREAD);
+	return NULL;
 }
 
 int prepareAsync(State **ps)
 {
     pthread_t prepare_thread;
-    pthread_create(&prepare_thread, NULL, (void *) &player_prepare_thread, ps);
+    pthread_create(&prepare_thread, NULL, player_prepare_thread, ps);
+    pthread_detach(prepare_thread);
     return SUCCESS;
 }
 
@@ -686,13 +653,14 @@ int start(State **ps)
 {
 	State *state = *ps;
     
-	if (!state->paused) {
-		pthread_mutex_lock(lock);
-		pthread_create(&state->decoder_thread, NULL, (void *) &player_decode, state);
+    pthread_mutex_lock(lock);
+	if (!state->decoder_started) {
+		state->abort_request = 0;
+		if (pthread_create(&state->decoder_thread, NULL, player_decode, state) == 0) {
+			state->decoder_started = 1;
+		}
 	}
-    
     state->paused = 0;
-    
     pthread_mutex_unlock(lock);
     
     return 0;
@@ -715,7 +683,7 @@ int pause(State **ps)
 	
     pthread_mutex_lock(lock);
 	state->paused = !state->paused;
-    pthread_mutex_lock(lock);
+    pthread_mutex_unlock(lock);
     
     return 0;
 }
@@ -786,7 +754,10 @@ int reset(State **ps)
 
     if (state) {
     	state->abort_request = 1;
-    	pthread_join(state->decoder_thread, NULL);
+    	if (state->decoder_started) {
+    		pthread_join(state->decoder_thread, NULL);
+    		state->decoder_started = 0;
+    	}
     }
     
     pthread_mutex_unlock(lock);

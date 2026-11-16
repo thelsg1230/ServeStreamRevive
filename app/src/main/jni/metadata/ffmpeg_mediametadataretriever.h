@@ -54,10 +54,6 @@ typedef struct State {
 	ANativeWindow   *native_window;
 } State;
 
-struct AVDictionary {
-	int count;
-	AVDictionaryEntry *elems;
-};
 
 int set_data_source_uri(State **ps, const char* path, const char* headers);
 int set_data_source_fd(State **ps, int fd, int64_t offset, int64_t length);

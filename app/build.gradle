@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "net.sourceforge.servestream"
-        minSdkVersion 14
+        minSdkVersion 21
         targetSdkVersion 27
         versionName "0.7.3"
         versionCode 114
@@ -37,9 +37,9 @@ android {
         jniLibs.srcDir 'src/main/libs' // This is not necessary unless you have precompiled libraries in your project.
     }
 
-    task buildFFmpeg(type: Exec, description: 'Compile FFmpeg source via NDK') {
-        def dir = file('src/main/ffmpeg/build-ffmpeg.sh').absolutePath
-        commandLine "$dir"
+    task buildFFmpeg(type: Exec, description: 'Compile FFmpeg and OpenSSL via NDK') {
+        def script = file('src/main/ffmpeg/build_ffmpeg_modern.sh').absolutePath
+        commandLine 'bash', script, android.ndkDirectory.absolutePath, 'arm64-v8a', 'armeabi-v7a'
     }
 
     task buildNative(type: Exec, description: 'Compile JNI source via NDK') {
@@ -50,7 +50,7 @@ android {
                 '-C', file('src/main/jni').absolutePath, // Change src/main/jni the relative path to your jni source
                 '-j', Runtime.runtime.availableProcessors(),
                 'all',
-                'NDK_DEBUG=1'
+                'NDK_DEBUG=0'
     }
 
     task cleanNative(type: Exec, description: 'Clean JNI object files') {
