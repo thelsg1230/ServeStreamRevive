@@ -43,6 +43,7 @@ public class HTTP extends AbsTransport {
 	private InputStream is = null;
 	private int mResponseCode = -1;
 	private String mContentType = null;
+	private String mDebugInfo = null;
 	
 	public HTTP() {
 		super();
@@ -175,12 +176,7 @@ public class HTTP extends AbsTransport {
     		url = uri.getURL();
     	}
 
-    	conn = (HttpURLConnection) url.openConnection();        	
-    	conn.setConnectTimeout(6000);
-    	conn.setReadTimeout(6000);
-	    conn.setRequestMethod("GET");
-    	conn.setRequestProperty("User-Agent", "ServeStream");
-    		
+    	conn = HttpRedirectHelper.open(url, null);
 	    mResponseCode = conn.getResponseCode();
 		    
 	    if (mResponseCode == -1) {
@@ -188,7 +184,13 @@ public class HTTP extends AbsTransport {
 	    }
 	        
 	    mContentType = conn.getContentType();
+	    mDebugInfo = mResponseCode + " " + mContentType + " " + conn.getURL();
 	    is = conn.getInputStream();
+	}
+
+	@Override
+	public String getDebugInfo() {
+		return mDebugInfo;
 	}
 
 	@Override

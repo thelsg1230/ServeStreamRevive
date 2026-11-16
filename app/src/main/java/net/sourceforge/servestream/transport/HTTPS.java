@@ -49,10 +49,11 @@ public class HTTPS extends AbsTransport {
 	private static final String PROTOCOL = "https";
 	private static final int DEFAULT_PORT = 443;
 	
-	private HttpsURLConnection conn = null;
+	private HttpURLConnection conn = null;
 	private InputStream is = null;
 	private int mResponseCode = -1;
 	private String mContentType = null;
+	private String mDebugInfo = null;
 	
 	public HTTPS() {
 		super();
@@ -186,13 +187,13 @@ public class HTTPS extends AbsTransport {
     	}
 
     	trustAllHosts();
-    	conn = (HttpsURLConnection) url.openConnection();   
-    	conn.setHostnameVerifier(DO_NOT_VERIFY);
-    	conn.setConnectTimeout(6000);
-    	conn.setReadTimeout(6000);
-	    conn.setRequestMethod("GET");
-    	conn.setRequestProperty("User-Agent", "ServeStream");
-    	
+    	conn = HttpRedirectHelper.open(url, new HttpRedirectHelper.Configurator() {
+			public void configure(HttpURLConnection c) {
+				if (c instanceof HttpsURLConnection) {
+					((HttpsURLConnection) c).setHostnameVerifier(DO_NOT_VERIFY);
+				}
+			}
+		});
 	    mResponseCode = conn.getResponseCode();
 		    
 	    if (mResponseCode == -1) {
@@ -200,7 +201,13 @@ public class HTTPS extends AbsTransport {
 	    }
 	        
 	    mContentType = conn.getContentType();
+	    mDebugInfo = mResponseCode + " " + mContentType + " " + conn.getURL();
 	    is = conn.getInputStream();
+	}
+
+	@Override
+	public String getDebugInfo() {
+		return mDebugInfo;
 	}
 
 	@Override

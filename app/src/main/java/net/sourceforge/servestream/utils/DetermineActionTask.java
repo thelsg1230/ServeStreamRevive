@@ -24,6 +24,7 @@ import net.sourceforge.servestream.transport.AbsTransport;
 import net.sourceforge.servestream.transport.TransportFactory;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.widget.Toast;
 
 /**
  * Asynchronous task that prepares a MusicRetriever. This asynchronous task essentially calls
@@ -42,6 +43,7 @@ public class DetermineActionTask extends AsyncTask<Void, Void, Void> {
 	
 	private String mAction;
 	private long[] mList;
+	private String mDebugInfo;
 
     public DetermineActionTask(Context context,
     		UriBean uri,
@@ -63,6 +65,7 @@ public class DetermineActionTask extends AsyncTask<Void, Void, Void> {
 		
 		try {
 			transport.connect();
+			mDebugInfo = transport.getDebugInfo();
 		
 			if (transport.getContentType() == null) {
 				mAction = URL_ACTION_UNDETERMINED;
@@ -94,6 +97,9 @@ public class DetermineActionTask extends AsyncTask<Void, Void, Void> {
 	
     @Override
     protected void onPostExecute(Void result) {
+        if (URL_ACTION_BROWSE.equals(mAction) && mDebugInfo != null) {
+            Toast.makeText(mContext, "Server response: " + mDebugInfo, Toast.LENGTH_LONG).show();
+        }
         mListener.onMusicRetrieverPrepared(mAction, mUri, mList);
     }
 	

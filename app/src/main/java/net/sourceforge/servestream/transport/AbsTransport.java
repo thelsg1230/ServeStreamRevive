@@ -105,4 +105,11 @@ public abstract class AbsTransport {
 	public abstract boolean usesNetwork();
 	
 	public abstract boolean isPotentialPlaylist();
+
+	/**
+	 * @return a short description of the server response, or null
+	 */
+	public String getDebugInfo() {
+		return null;
+	}
 }
