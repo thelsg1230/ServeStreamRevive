@@ -95,3 +95,28 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: bash .github/scripts/smoke.sh
+
+  release:
+    needs: smoke-test
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: ServeStream-debug
+          path: apk
+
+      - name: Publish as "latest" release (direct APK link)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          cp "$(find apk -name '*.apk' | head -1)" ServeStream.apk
+          gh release delete latest --repo "$REPO" --cleanup-tag --yes || true
+          gh release create latest ServeStream.apk --repo "$REPO" \
+            --target "$GITHUB_SHA" --latest \
+            --title "ServeStream 2.0.0 (latest build)" \
+            --notes "Built from ${GITHUB_SHA::7}. Direct download: https://github.com/$REPO/releases/download/latest/ServeStream.apk"
