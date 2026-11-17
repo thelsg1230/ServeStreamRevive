@@ -31,6 +31,7 @@
 	<uses-permission android:name="android.permission.READ_PHONE_STATE" />
 	<uses-permission android:name="android.permission.VIBRATE"/>
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 	<!-- In-app billing permission  -->
@@ -38,6 +39,7 @@
 	
 	<application
 	    android:name="net.sourceforge.servestream.ServeStreamApp"
+		android:usesCleartextTraffic="true"
 		android:icon="@drawable/ic_launcher"
 		android:label="@string/app_name"
 		android:allowBackup="true"
