@@ -50,7 +50,14 @@ public final class CrashReporter {
                     out.close();
                 } catch (Throwable ignored) {
                 }
+                boolean inCrashProcess = false;
                 try {
+                    if (Build.VERSION.SDK_INT >= 28) {
+                        inCrashProcess = android.app.Application.getProcessName().endsWith(":crash");
+                    }
+                } catch (Throwable ignored) {
+                }
+                if (!inCrashProcess) try {
                     // show the report right away from a separate process
                     android.content.Intent i = new android.content.Intent(app,
                             net.sourceforge.servestream.activity.CrashReportActivity.class);
