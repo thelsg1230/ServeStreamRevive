@@ -534,6 +534,18 @@ public class MediaPlaybackService extends Service implements
     }
 
     @Override
+    public void sendBroadcast(Intent intent) {
+        // Android 14+: keep app-internal broadcasts package-scoped so the
+        // not-exported receivers of our activities receive them.
+        String action = intent.getAction();
+        if (action != null && !action.startsWith("android.")
+                && intent.getPackage() == null && intent.getComponent() == null) {
+            intent.setPackage(getPackageName());
+        }
+        super.sendBroadcast(intent);
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
 

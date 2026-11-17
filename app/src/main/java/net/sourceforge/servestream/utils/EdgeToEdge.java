@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -42,11 +43,21 @@ public final class EdgeToEdge implements Application.ActivityLifecycleCallbacks 
         controller.setAppearanceLightStatusBars(!night);
         controller.setAppearanceLightNavigationBars(!night);
 
+        // Activities with AppCompat's window action bar place that bar below the
+        // status bar themselves, so only the sides and bottom are handled here.
+        final boolean decorActionBar = activity instanceof AppCompatActivity
+                && ((AppCompatActivity) activity).getSupportActionBar() != null;
+
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
                     | WindowInsetsCompat.Type.displayCutout());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-            v.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+            int bottom = Math.max(bars.bottom, ime.bottom);
+            if (decorActionBar) {
+                v.setPadding(bars.left, 0, bars.right, bottom);
+                return insets.inset(bars.left, 0, bars.right, bottom);
+            }
+            v.setPadding(bars.left, bars.top, bars.right, bottom);
             return WindowInsetsCompat.CONSUMED;
         });
         ViewCompat.requestApplyInsets(root);
