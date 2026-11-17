@@ -104,9 +104,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         // pick it up.
         AlarmAlertWakeLock.acquireCpuWakeLock(context);
 
-        /* Close dialogs and window shade */
-        Intent closeDialogs = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-        context.sendBroadcast(closeDialogs);
 
         // Decide which activity to start based on the state of the keyguard.
         Class<?> c = AlarmAlert.class;
@@ -119,22 +116,27 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         // Play the alarm alert and vibrate the device.
         Intent playAlarm = new Intent(Alarms.ALARM_ALERT_ACTION);
+        playAlarm.setClass(context, AlarmKlaxon.class);
         playAlarm.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
-        ServiceStarter.startServiceSafely(context, playAlarm);
+        try {
+            androidx.core.content.ContextCompat.startForegroundService(context, playAlarm);
+        } catch (RuntimeException e) {
+            Log.v(TAG, "Could not start alarm sound: " + e);
+        }
 
         // Trigger a notification that, when clicked, will show the alarm alert
         // dialog. No need to check for fullscreen since this will always be
         // launched from a user action.
         Intent notify = new Intent(context, AlarmAlert.class);
         notify.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
-        PendingIntent pendingNotify = PendingIntent.getActivity(context,
+        PendingIntent pendingNotify = net.sourceforge.servestream.utils.Compat.activity(context,
                 alarm.id, notify, 0);
 
         // Use the alarm's label or the default label as the ticker text and
         // main text of the notification.
         String label = alarm.getLabelOrDefault(context);
 
-        Notification.Builder builder = new Notification.Builder(context)
+        Notification.Builder builder = AlarmNotifications.builder(context)
                 .setContentIntent(pendingNotify)
                 .setSmallIcon(R.drawable.stat_notify_alarm)
                 .setContentTitle(label)
@@ -153,7 +155,8 @@ public class AlarmReceiver extends BroadcastReceiver {
         alarmAlert.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
         alarmAlert.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
-        n.contentIntent = PendingIntent.getActivity(context, alarm.id, alarmAlert, 0);
+        n.contentIntent = net.sourceforge.servestream.utils.Compat.activity(context, alarm.id, alarmAlert, 0);
+        n.fullScreenIntent = n.contentIntent;
 
         // Send the notification using the alarm id to easily identify the
         // correct notification.
@@ -179,13 +182,13 @@ public class AlarmReceiver extends BroadcastReceiver {
         Intent viewAlarm = new Intent(context, SetAlarmActivity.class);
         viewAlarm.putExtra(Alarms.ALARM_ID, alarm.id);
         PendingIntent intent =
-                PendingIntent.getActivity(context, alarm.id, viewAlarm, 0);
+                net.sourceforge.servestream.utils.Compat.activity(context, alarm.id, viewAlarm, 0);
 
         // Update the notification to indicate that the alert has been
         // silenced.
         String label = alarm.getLabelOrDefault(context);
 
-        Notification.Builder builder = new Notification.Builder(context)
+        Notification.Builder builder = AlarmNotifications.builder(context)
                 .setContentIntent(intent)
                 .setSmallIcon(R.drawable.stat_notify_alarm)
                 .setContentTitle(label)

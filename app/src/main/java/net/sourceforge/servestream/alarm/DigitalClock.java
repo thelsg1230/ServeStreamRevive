@@ -135,7 +135,7 @@ public class DigitalClock extends LinearLayout {
             filter.addAction(Intent.ACTION_TIME_TICK);
             filter.addAction(Intent.ACTION_TIME_CHANGED);
             filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
-            getContext().registerReceiver(mIntentReceiver, filter);
+            net.sourceforge.servestream.utils.Compat.register(getContext(), mIntentReceiver, filter);
         }
 
         /* monitor 12/24-hour display preference */

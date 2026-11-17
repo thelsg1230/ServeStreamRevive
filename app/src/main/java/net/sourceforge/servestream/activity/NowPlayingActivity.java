@@ -300,7 +300,7 @@ public class NowPlayingActivity extends ActionBarActivity implements
         try {
             int cur = MusicUtils.sService.getQueuePosition();
             mList.setSelection(cur);
-            registerReceiver(mNowPlayingListener, new IntentFilter(f));
+            net.sourceforge.servestream.utils.Compat.register(this, mNowPlayingListener, new IntentFilter(f));
             mNowPlayingListener.onReceive(this, new Intent(MediaPlaybackService.META_CHANGED));
         } catch (RemoteException ex) {
         }

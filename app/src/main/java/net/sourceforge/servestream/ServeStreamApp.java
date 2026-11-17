@@ -27,6 +27,8 @@ public class ServeStreamApp extends Application {
 	public void onCreate() {
 		super.onCreate();
 		net.sourceforge.servestream.utils.CrashReporter.install(this);
+		net.sourceforge.servestream.utils.EdgeToEdge.install(this);
+		com.google.android.material.color.DynamicColors.applyToActivitiesIfAvailable(this);
 		UserPreferences.createInstance(this);
 	}
 }

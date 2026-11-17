@@ -98,7 +98,7 @@ public class MediaPlayerFragment extends Fragment implements CoverViewListener {
         IntentFilter f = new IntentFilter();
         f.addAction(MediaPlaybackService.META_CHANGED);
         f.addAction(MediaPlaybackService.ART_CHANGED);
-        getActivity().registerReceiver(mStatusListener, new IntentFilter(f));
+        net.sourceforge.servestream.utils.Compat.register(getActivity(), mStatusListener, new IntentFilter(f));
         updateTrackInfo();
     }
     

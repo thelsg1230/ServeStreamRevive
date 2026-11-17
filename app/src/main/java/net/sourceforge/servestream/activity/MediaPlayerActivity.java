@@ -310,7 +310,7 @@ public class MediaPlayerActivity extends ActionBarActivity implements MusicUtils
         f.addAction(MediaPlaybackService.META_CHANGED);
         f.addAction(MediaPlaybackService.START_DIALOG);
         f.addAction(MediaPlaybackService.STOP_DIALOG);
-        registerReceiver(mStatusListener, new IntentFilter(f));
+        net.sourceforge.servestream.utils.Compat.register(this, mStatusListener, new IntentFilter(f));
         updateTrackInfo();
         long next = refreshNow();
         queueNextRefresh(next);

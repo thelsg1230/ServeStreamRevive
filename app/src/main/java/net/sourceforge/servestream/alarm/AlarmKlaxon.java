@@ -50,6 +50,8 @@ import android.util.Log;
  */
 public class AlarmKlaxon extends Service implements ServiceConnection, 
 				DetermineActionTask.MusicRetrieverPreparedListener {
+    private static final int ALARM_FOREGROUND_ID = 0x5a1a;
+
 
 	private static final String TAG = AlarmKlaxon.class.getName();
 	
@@ -108,8 +110,12 @@ public class AlarmKlaxon extends Service implements ServiceConnection,
         // Listen for incoming calls to kill the alarm.
         mTelephonyManager =
                 (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        mTelephonyManager.listen(
-                mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+        try {
+            mTelephonyManager.listen(
+                    mPhoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+        } catch (SecurityException e) {
+            Log.v(TAG, "No phone state permission: " + e);
+        }
         AlarmAlertWakeLock.acquireCpuWakeLock(this);
     }
 
@@ -117,7 +123,10 @@ public class AlarmKlaxon extends Service implements ServiceConnection,
     public void onDestroy() {
         stop();
         // Stop listening for incoming calls.
-        mTelephonyManager.listen(mPhoneStateListener, 0);
+        try {
+            mTelephonyManager.listen(mPhoneStateListener, 0);
+        } catch (SecurityException ignored) {
+        }
         AlarmAlertWakeLock.releaseCpuLock();
         
         MusicUtils.unbindFromService(mToken);
@@ -149,6 +158,13 @@ public class AlarmKlaxon extends Service implements ServiceConnection,
             sendKillBroadcast(mCurrentAlarm);
         }
 
+        startForeground(ALARM_FOREGROUND_ID, AlarmNotifications.builder(this)
+                .setSmallIcon(R.drawable.stat_notify_alarm)
+                .setContentTitle(alarm.getLabelOrDefault(this))
+                .setContentText(getString(R.string.alarm_notify_text))
+                .setOngoing(true)
+                .build());
+
         mAlarm = alarm;
         mToken = MusicUtils.bindToService(this, this);
 
@@ -161,6 +177,7 @@ public class AlarmKlaxon extends Service implements ServiceConnection,
         Intent alarmKilled = new Intent(Alarms.ALARM_KILLED);
         alarmKilled.putExtra(Alarms.ALARM_INTENT_EXTRA, alarm);
         alarmKilled.putExtra(Alarms.ALARM_KILLED_TIMEOUT, minutes);
+        alarmKilled.setPackage(getPackageName());
         sendBroadcast(alarmKilled);
     }
 
@@ -212,8 +229,7 @@ public class AlarmKlaxon extends Service implements ServiceConnection,
             try {
                 // Check if we are in a call. If we are, use the in-call alarm
                 // resource at a low volume to not disrupt the call.
-                if (mTelephonyManager.getCallState()
-                        != TelephonyManager.CALL_STATE_IDLE) {
+                if (callState() != TelephonyManager.CALL_STATE_IDLE) {
                     Log.v(TAG, "Using the in-call alarm");
                     mMediaPlayer.setVolume(IN_CALL_VOLUME, IN_CALL_VOLUME);
                     setDataSourceFromResource(getResources(), mMediaPlayer,
@@ -273,6 +289,7 @@ public class AlarmKlaxon extends Service implements ServiceConnection,
             mPlaying = false;
 
             Intent alarmDone = new Intent(Alarms.ALARM_DONE_ACTION);
+            alarmDone.setPackage(getPackageName());
             sendBroadcast(alarmDone);
 
             // Stop audio playing
@@ -336,8 +353,16 @@ public class AlarmKlaxon extends Service implements ServiceConnection,
         mCurrentAlarm = mAlarm;
         // Record the initial call state here so that the new alarm has the
         // newest state.
-        mInitialCallState = mTelephonyManager.getCallState();
+        mInitialCallState = callState();
 	}
+
+    private int callState() {
+        try {
+            return mTelephonyManager.getCallState();
+        } catch (SecurityException e) {
+            return TelephonyManager.CALL_STATE_IDLE;
+        }
+    }
 
 	public void onServiceDisconnected(ComponentName name) {
 				

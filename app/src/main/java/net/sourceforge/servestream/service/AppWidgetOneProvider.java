@@ -184,30 +184,30 @@ public class AppWidgetOneProvider extends AppWidgetProvider {
           	TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         	stackBuilder.addNextIntentWithParentStack(new Intent(context, MediaPlayerActivity.class)
             	.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-        	pendingIntent = stackBuilder.getPendingIntent((int) System.currentTimeMillis(), 0);
+        	pendingIntent = stackBuilder.getPendingIntent((int) System.currentTimeMillis(), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             views.setOnClickPendingIntent(R.id.appwidget_two, pendingIntent);
         } else {
             intent = new Intent(context, MainActivity.class);
-            pendingIntent = PendingIntent.getActivity(context,
+            pendingIntent = net.sourceforge.servestream.utils.Compat.activity(context,
                     0 /* no requestCode */, intent, 0 /* no flags */);
             views.setOnClickPendingIntent(R.id.appwidget_two, pendingIntent);
         }
         
         intent = new Intent(MediaPlaybackService.PREVIOUS_ACTION);
         intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context,
+        pendingIntent = net.sourceforge.servestream.utils.Compat.service(context,
                 0 /* no requestCode */, intent, 0 /* no flags */);
         views.setOnClickPendingIntent(R.id.control_previous, pendingIntent);
         
         intent = new Intent(MediaPlaybackService.TOGGLEPAUSE_ACTION);
         intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context,
+        pendingIntent = net.sourceforge.servestream.utils.Compat.service(context,
                 0 /* no requestCode */, intent, 0 /* no flags */);
         views.setOnClickPendingIntent(R.id.control_play, pendingIntent);
         
         intent = new Intent(MediaPlaybackService.NEXT_ACTION);
         intent.setComponent(serviceName);
-        pendingIntent = PendingIntent.getService(context,
+        pendingIntent = net.sourceforge.servestream.utils.Compat.service(context,
                 0 /* no requestCode */, intent, 0 /* no flags */);
         views.setOnClickPendingIntent(R.id.control_next, pendingIntent);
     }

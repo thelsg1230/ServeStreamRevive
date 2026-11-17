@@ -115,7 +115,7 @@ public class AlarmAlertFullScreen extends Activity {
         IntentFilter filter = new IntentFilter(Alarms.ALARM_KILLED);
         filter.addAction(Alarms.ALARM_SNOOZE_ACTION);
         filter.addAction(Alarms.ALARM_DISMISS_ACTION);
-        registerReceiver(mReceiver, filter);
+        net.sourceforge.servestream.utils.Compat.register(this, mReceiver, filter);
     }
 
     private void setTitle() {
@@ -184,7 +184,7 @@ public class AlarmAlertFullScreen extends Activity {
         cancelSnooze.setAction(Alarms.CANCEL_SNOOZE);
         cancelSnooze.putExtra(Alarms.ALARM_ID, mAlarm.id);
         PendingIntent broadcast =
-                PendingIntent.getBroadcast(this, mAlarm.id, cancelSnooze, 0);
+                net.sourceforge.servestream.utils.Compat.broadcast(this, mAlarm.id, cancelSnooze, 0);
         NotificationManager nm = getNotificationManager();
 
         Notification.Builder builder = new Notification.Builder(AlarmAlertFullScreen.this)
@@ -209,7 +209,7 @@ public class AlarmAlertFullScreen extends Activity {
         // Display the snooze minutes in a toast.
         Toast.makeText(AlarmAlertFullScreen.this, displayTime,
                 Toast.LENGTH_LONG).show();
-        stopService(new Intent(Alarms.ALARM_ALERT_ACTION));
+        stopService(new Intent(this, AlarmKlaxon.class));
         finish();
     }
 
@@ -226,7 +226,7 @@ public class AlarmAlertFullScreen extends Activity {
             // Cancel the notification and stop playing the alarm
             NotificationManager nm = getNotificationManager();
             nm.cancel(mAlarm.id);
-            stopService(new Intent(Alarms.ALARM_ALERT_ACTION));
+            stopService(new Intent(this, AlarmKlaxon.class));
         }
         finish();
     }

@@ -367,6 +367,7 @@ public class Alarms {
         Log.v(TAG, "** setAlert id " + alarm.id + " atTime " + atTimeInMillis);
 
         Intent intent = new Intent(ALARM_ALERT_ACTION);
+        intent.setClass(context, AlarmReceiver.class);
 
         // XXX: This is a slight hack to avoid an exception in the remote
         // AlarmManagerService process. The AlarmManager adds extra data to
@@ -382,10 +383,16 @@ public class Alarms {
         out.setDataPosition(0);
         intent.putExtra(ALARM_RAW_DATA, out.marshall());
 
-        PendingIntent sender = PendingIntent.getBroadcast(
+        PendingIntent sender = net.sourceforge.servestream.utils.Compat.broadcast(
                 context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
-        am.set(AlarmManager.RTC_WAKEUP, atTimeInMillis, sender);
+        try {
+            Intent show = new Intent(context, net.sourceforge.servestream.activity.AlarmClockActivity.class);
+            am.setAlarmClock(new AlarmManager.AlarmClockInfo(atTimeInMillis,
+                    net.sourceforge.servestream.utils.Compat.activity(context, 0, show, 0)), sender);
+        } catch (SecurityException e) {
+            am.set(AlarmManager.RTC_WAKEUP, atTimeInMillis, sender);
+        }
 
         setStatusBarIcon(context, true);
 
@@ -403,8 +410,8 @@ public class Alarms {
     static void disableAlert(Context context) {
         AlarmManager am = (AlarmManager)
                 context.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent sender = PendingIntent.getBroadcast(
-                context, 0, new Intent(ALARM_ALERT_ACTION),
+        PendingIntent sender = net.sourceforge.servestream.utils.Compat.broadcast(
+                context, 0, new Intent(ALARM_ALERT_ACTION).setClass(context, AlarmReceiver.class),
                 PendingIntent.FLAG_CANCEL_CURRENT);
         am.cancel(sender);
         setStatusBarIcon(context, false);
@@ -493,9 +500,7 @@ public class Alarms {
      * Tells the StatusBar whether the alarm is enabled or disabled
      */
     private static void setStatusBarIcon(Context context, boolean enabled) {
-        Intent alarmChanged = new Intent("android.intent.action.ALARM_CHANGED");
-        alarmChanged.putExtra("alarmSet", enabled);
-        context.sendBroadcast(alarmChanged);
+        // The status bar shows the next alarm from AlarmManager.setAlarmClock().
     }
 
     private static long calculateAlarm(Alarm alarm) {

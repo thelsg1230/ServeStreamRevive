@@ -30,7 +30,15 @@
 	<uses-permission android:name="android.permission.VIBRATE"/>
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+	<uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+	<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+	<uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+	<uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
 	<!-- In-app billing permission  -->
 	<uses-permission android:name="com.android.vending.BILLING" />
@@ -61,6 +69,7 @@
 
 		<activity
 		    android:name=".activity.MainActivity"
+		    android:exported="true"
 			android:theme="@style/Theme.ServeStream.DarkActionBar.NoActionBar"
 		    android:launchMode="singleTop" >
 		    
@@ -123,6 +132,7 @@
         
 		<activity
             android:name=".activity.AddUrlActivity"
+            android:exported="true"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/add_new_url_label"
             android:windowSoftInputMode="adjustResize"
@@ -178,6 +188,7 @@
 		
 		<activity
 		    android:name=".activity.SearchableActivity"
+		    android:exported="true"
 		    android:launchMode="singleTop" >
         	<intent-filter>
             	<action android:name="android.intent.action.SEARCH" />
@@ -193,7 +204,8 @@
             android:label="@string/settings_label" />
         
 		<activity
-		    android:name=".activity.ShortcutActivity" >
+		    android:name=".activity.ShortcutActivity"
+		    android:exported="true" >
 			<intent-filter>
 				<action android:name="android.intent.action.CREATE_SHORTCUT" />
 				<category android:name="android.intent.category.DEFAULT" />
@@ -205,7 +217,8 @@
 
 		<service
 		    android:name=".service.MediaPlaybackService"
-		    android:exported="true"
+		    android:exported="false"
+		    android:foregroundServiceType="mediaPlayback"
 			android:description="@string/media_service_desc" />
 
         <activity
@@ -223,7 +236,8 @@
         </activity>
         
         <receiver
-            android:name=".receiver.MediaButtonIntentReceiver" >
+            android:name=".receiver.MediaButtonIntentReceiver"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
                 <action android:name="android.media.AUDIO_BECOMING_NOISY" />
@@ -231,7 +245,8 @@
         </receiver>
         
         <receiver
-            android:name=".service.AppWidgetOneProvider" >
+            android:name=".service.AppWidgetOneProvider"
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -296,7 +311,9 @@
         <activity
             android:name=".alarm.AlarmAlertFullScreen"
             android:excludeFromRecents="true"
-            android:theme="@android:style/Theme.Wallpaper.NoTitleBar"
+            android:theme="@style/Theme.ServeStream.Alarm"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
             android:launchMode="singleInstance"
             android:taskAffinity=""
             android:configChanges="orientation|keyboardHidden|keyboard|navigation" />
@@ -319,6 +336,7 @@
              causes the AlarmAlert activity to pause. -->
         <service
             android:name=".alarm.AlarmKlaxon"
+            android:foregroundServiceType="mediaPlayback"
 			android:description="@string/alarm_klaxon_service_desc"
 			android:exported="false" >                
             <intent-filter>

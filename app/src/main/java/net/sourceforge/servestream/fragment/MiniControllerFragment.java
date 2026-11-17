@@ -116,7 +116,7 @@ public class MiniControllerFragment extends Fragment implements ServiceConnectio
         f.addAction(MediaPlaybackService.PLAYSTATE_CHANGED);
         f.addAction(MediaPlaybackService.META_CHANGED);
         f.addAction(MediaPlaybackService.QUEUE_CHANGED);
-        getActivity().registerReceiver(mTrackListListener, f);
+        net.sourceforge.servestream.utils.Compat.register(getActivity(), mTrackListListener, f);
 	}
 
 	@Override

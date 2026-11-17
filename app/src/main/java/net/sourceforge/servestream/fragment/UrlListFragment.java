@@ -278,7 +278,7 @@ public class UrlListFragment extends ListFragment implements
 		
 		 IntentFilter f = new IntentFilter();
 	     f.addAction(UPDATE_LIST);
-	     getActivity().registerReceiver(mUpdateListListener, f);
+	     net.sourceforge.servestream.utils.Compat.register(getActivity(), mUpdateListListener, f);
 	}
 	
 	@Override

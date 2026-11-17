@@ -66,7 +66,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
 		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-		context.registerReceiver(this, filter);
+		net.sourceforge.servestream.utils.Compat.register(context, this, filter);
 	}
 	
 	@Override

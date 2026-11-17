@@ -563,7 +563,7 @@ public class MediaPlaybackService extends Service implements
         ComponentName eventReceiver = new ComponentName(getPackageName(), MediaButtonIntentReceiver.class.getName());
         Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
         mediaButtonIntent.setComponent(eventReceiver);
-        PendingIntent buttonReceiverIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent buttonReceiverIntent = net.sourceforge.servestream.utils.Compat.broadcast(this, 0, mediaButtonIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         mediaSession = new MediaSessionCompat(this, LOGTAG, eventReceiver, buttonReceiverIntent);
 
@@ -612,7 +612,7 @@ public class MediaPlaybackService extends Service implements
         commandFilter.addAction(PAUSE_ACTION);
         commandFilter.addAction(NEXT_ACTION);
         commandFilter.addAction(PREVIOUS_ACTION);
-        registerReceiver(mIntentReceiver, commandFilter);
+        net.sourceforge.servestream.utils.Compat.register(this, mIntentReceiver, commandFilter);
         
         // If the service was idle, but got killed before it stopped itself, the
         // system will relaunch it. Make sure it gets stopped again in that case.
@@ -1082,7 +1082,7 @@ public class MediaPlaybackService extends Service implements
             iFilter.addAction(Intent.ACTION_MEDIA_EJECT);
             iFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
             iFilter.addDataScheme("file");
-            registerReceiver(mUnmountReceiver, iFilter);
+            net.sourceforge.servestream.utils.Compat.register(this, mUnmountReceiver, iFilter);
         }
     }
 
@@ -1578,7 +1578,7 @@ public class MediaPlaybackService extends Service implements
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addNextIntentWithParentStack(new Intent(this, MediaPlayerActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-        PendingIntent contentIntent = stackBuilder.getPendingIntent((int) System.currentTimeMillis(), 0);
+        PendingIntent contentIntent = stackBuilder.getPendingIntent((int) System.currentTimeMillis(), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.MediaStyle style = new NotificationCompat.MediaStyle();
         style.setMediaSession(mediaSession.getSessionToken());
@@ -1633,7 +1633,7 @@ public class MediaPlaybackService extends Service implements
         intent.setAction(MediaPlaybackService.SERVICECMD);
         intent.putExtra(MediaPlaybackService.CMDNOTIF, requestCode);
         intent.putExtra(MediaPlaybackService.CMDNAME, command);
-        PendingIntent pendingIntent = PendingIntent.getService(this, requestCode, intent, 0);
+        PendingIntent pendingIntent = net.sourceforge.servestream.utils.Compat.service(this, requestCode, intent, 0);
 
         return new androidx.core.app.NotificationCompat.Action.Builder(icon, title, pendingIntent).build();
     }
@@ -1643,7 +1643,7 @@ public class MediaPlaybackService extends Service implements
         intent.setAction(MediaPlaybackService.SERVICECMD);
         intent.putExtra(MediaPlaybackService.CMDNOTIF, requestCode);
         intent.putExtra(MediaPlaybackService.CMDNAME, command);
-		return PendingIntent.getService(this, requestCode, intent, 0);
+		return net.sourceforge.servestream.utils.Compat.service(this, requestCode, intent, 0);
     }
     
     private void stop(boolean remove_status_icon) {
