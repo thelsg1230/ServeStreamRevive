@@ -265,6 +265,18 @@ public class MediaPlaybackService extends Service implements
                     setNextTrack();
                     break;
                 case TRACK_ENDED:
+                    if (shouldReconnect()) {
+                        mReconnectAttempts++;
+                        Log.i(LOGTAG, "Live stream ended, reconnecting (" + mReconnectAttempts + ")");
+                        mMediaplayerHandler.postDelayed(new Runnable() {
+                            public void run() {
+                                if (mIsSupposedToBePlaying) {
+                                    openCurrentAndNext();
+                                }
+                            }
+                        }, 2000L * mReconnectAttempts);
+                        break;
+                    }
                     if (mRepeatMode == REPEAT_CURRENT) {
                         seek(0);
                         play();
@@ -273,6 +285,7 @@ public class MediaPlaybackService extends Service implements
                     }
                     break;
                 case PREPARED:
+                    mReconnectAttempts = 0;
                     Intent i = new Intent("android.media.action.OPEN_AUDIO_EFFECT_CONTROL_SESSION");
                     i.putExtra("android.media.extra.AUDIO_SESSION", getAudioSessionId());
                     i.putExtra("android.media.extra.PACKAGE_NAME", getPackageName());
@@ -322,6 +335,9 @@ public class MediaPlaybackService extends Service implements
                     switch (msg.arg1) {
                         case AudioManager.AUDIOFOCUS_LOSS:
                             Log.v(LOGTAG, "AudioFocus: received AUDIOFOCUS_LOSS");
+                            if (!pauseOnFocusLoss()) {
+                                break;
+                            }
                             if(isPlaying()) {
                                 mPausedByTransientLossOfFocus = false;
                             }
@@ -333,6 +349,9 @@ public class MediaPlaybackService extends Service implements
                             break;
                         case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                             Log.v(LOGTAG, "AudioFocus: received AUDIOFOCUS_LOSS_TRANSIENT");
+                            if (!pauseOnFocusLoss()) {
+                                break;
+                            }
                             if(isPlaying()) {
                                 mPausedByTransientLossOfFocus = true;
                             }
@@ -559,6 +578,30 @@ public class MediaPlaybackService extends Service implements
     };
 
     public MediaPlaybackService() {
+    }
+
+    private int mReconnectAttempts = 0;
+    private static final int MAX_RECONNECT_ATTEMPTS = 10;
+
+    /** A live network stream (no duration) that stopped by itself while it should play. */
+    private boolean shouldReconnect() {
+        if (!mIsSupposedToBePlaying || mReconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+            return false;
+        }
+        String path = mFileToPlay != null ? mFileToPlay : getMediaUri();
+        if (path == null || !(path.startsWith("http") || path.startsWith("mms") || path.startsWith("rtsp"))) {
+            return false;
+        }
+        try {
+            return mPlayer == null || mPlayer.duration() <= 0;
+        } catch (RuntimeException e) {
+            return true;
+        }
+    }
+
+    private boolean pauseOnFocusLoss() {
+        return mPreferences == null
+                || mPreferences.getBoolean(PreferenceConstants.PAUSE_ON_FOCUS_LOSS, true);
     }
 
     private Intent scoped(Intent intent) {
@@ -1559,7 +1602,12 @@ public class MediaPlaybackService extends Service implements
             Log.i(LOGTAG, "Opening: " + mFileToPlay);
             
             sendStickyBroadcast(new Intent(START_DIALOG));
-            
+
+            // Become a foreground service now, while the user is still in the app.
+            // Starting it later (when preparing finishes in the background) is not
+            // allowed on Android 12+ and would stop playback.
+            updateNotification(false);
+
             boolean isLocalFile = mPreferences.getBoolean(PreferenceConstants.PROGRESSIVE_DOWNLOAD, false);
             boolean useFFmpegPlayer = mPreferences.getBoolean(PreferenceConstants.USE_FFMPEG_PLAYER, false);   	
             if (isLocalFile) {
@@ -1683,7 +1731,13 @@ public class MediaPlaybackService extends Service implements
         builder.setStyle(style);
 
         if (!updateNotification) {
-            startForeground(PLAYBACKSERVICE_STATUS, builder.build());
+            try {
+                startForeground(PLAYBACKSERVICE_STATUS, builder.build());
+            } catch (RuntimeException e) {
+                Log.w(LOGTAG, "startForeground not allowed now", e);
+                ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE))
+                        .notify(PLAYBACKSERVICE_STATUS, builder.build());
+            }
         } else {
             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(PLAYBACKSERVICE_STATUS, builder.build());

@@ -93,6 +93,12 @@
 			android:defaultValue="true" />
 			
 		<CheckBoxPreference
+			android:key="pauseonfocusloss"
+			android:title="@string/pref_pauseonfocusloss_title"
+			android:summary="@string/pref_pauseonfocusloss_summary"
+			android:defaultValue="true" />
+
+		<CheckBoxPreference
 			android:key="headphonepause"
 			android:title="@string/pref_headphonepause_title"
 			android:summary="@string/pref_headphonepause_summary"

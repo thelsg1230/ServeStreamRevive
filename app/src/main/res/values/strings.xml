@@ -340,5 +340,7 @@
     <string name="language_system">System default</string>
     <string name="language_english" translatable="false">English</string>
     <string name="language_korean" translatable="false">한국어</string>
+    <string name="pref_pauseonfocusloss_title">Pause for other apps\' audio</string>
+    <string name="pref_pauseonfocusloss_summary">Pause when another app starts playing sound. Turn off to keep the radio playing.</string>
 </resources>
 

@@ -544,6 +544,9 @@ int player_prepare(State **ps, int from_thread)
     av_dict_set(&options, "user-agent", "FFmpegMediaPlayer", 0);
     av_dict_set(&options, "rw_timeout", "15000000", 0);
     av_dict_set(&options, "reconnect", "1", 0);
+    av_dict_set(&options, "reconnect_streamed", "1", 0);
+    av_dict_set(&options, "reconnect_on_network_error", "1", 0);
+    av_dict_set(&options, "reconnect_delay_max", "30", 0);
     
     if (state->headers[0]) {
     	av_dict_set(&options, "headers", state->headers, 0);

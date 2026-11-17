@@ -130,4 +130,6 @@
     <string name="backup_failed">備份失敗。</string>
     <string name="restore_done">已還原 %d 個新電台。</string>
     <string name="restore_failed">還原失敗。</string>
+    <string name="pref_pauseonfocusloss_title">其他應用程式播放聲音時暫停</string>
+    <string name="pref_pauseonfocusloss_summary">其他應用程式播放聲音時暫停。關閉後電台會繼續播放。</string>
 </resources>

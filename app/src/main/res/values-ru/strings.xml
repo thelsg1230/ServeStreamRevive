@@ -258,5 +258,7 @@
     <string name="theme_light">Светлая</string>
     <string name="theme_system">Как в системе</string>
     <string name="togglepause_action_title">Воспроизведение/пауза</string>
+    <string name="pref_pauseonfocusloss_title">Пауза при звуке других приложений</string>
+    <string name="pref_pauseonfocusloss_summary">Пауза, когда другое приложение воспроизводит звук. Выключите, чтобы радио продолжало играть.</string>
 </resources>
 

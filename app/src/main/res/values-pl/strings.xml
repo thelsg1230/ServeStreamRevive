@@ -340,5 +340,7 @@
     <string name="theme_dark">Ciemny</string>
     <string name="theme_light">Jasny</string>
     <string name="theme_system">Ustawienie systemowe</string>
+    <string name="pref_pauseonfocusloss_title">Pauza przy dźwięku innych aplikacji</string>
+    <string name="pref_pauseonfocusloss_summary">Wstrzymuje, gdy inna aplikacja odtwarza dźwięk. Wyłącz, aby radio grało dalej.</string>
 </resources>
 

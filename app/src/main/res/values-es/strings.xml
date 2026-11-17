@@ -258,5 +258,7 @@
     <string name="theme_light">Claro</string>
     <string name="theme_system">Predeterminado del sistema</string>
     <string name="togglepause_action_title">Reproducir/Pausa</string>
+    <string name="pref_pauseonfocusloss_title">Pausar con el audio de otras apps</string>
+    <string name="pref_pauseonfocusloss_summary">Pausa cuando otra app reproduce sonido. Desactívalo para que la radio siga sonando.</string>
 </resources>
 
