@@ -32,8 +32,19 @@ android {
         disable 'MissingTranslation', 'ExtraTranslation'
     }
 
+    signingConfigs {
+        // fixed key so new builds install as updates over older ones
+        stable {
+            storeFile file('servestream-debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
     buildTypes {
         debug {
+            signingConfig signingConfigs.stable
             // non-debuggable build: ART CheckJNI stays off, like the original release APK
             debuggable false
             jniDebuggable false
