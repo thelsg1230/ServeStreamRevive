@@ -355,7 +355,10 @@ public class MediaPlaybackService extends Service implements
                             if(isPlaying()) {
                                 mPausedByTransientLossOfFocus = true;
                             }
+                            // stay a foreground service so playback can resume from the background
+                            mKeepForegroundOnPause = true;
                             pause(true);
+                            mKeepForegroundOnPause = false;
                             break;
                         case AudioManager.AUDIOFOCUS_GAIN:
                             Log.v(LOGTAG, "AudioFocus: received AUDIOFOCUS_GAIN");
@@ -469,7 +472,9 @@ public class MediaPlaybackService extends Service implements
             } else if (CMDPAUSE.equals(cmd) || PAUSE_ACTION.equals(action)) {
             	boolean wasPlaying = mIsSupposedToBePlaying;
             	
+                mKeepForegroundOnPause = intent.getBooleanExtra("from_connectivity_receiver", false);
                 pause(true);
+                mKeepForegroundOnPause = false;
                 mPausedByTransientLossOfFocus = false;
                 
                 if (wasPlaying != mIsSupposedToBePlaying) {
@@ -518,7 +523,10 @@ public class MediaPlaybackService extends Service implements
                 } else if (CMDPAUSE.equals(cmd) || PAUSE_ACTION.equals(action)) {
                     boolean wasPlaying = mIsSupposedToBePlaying;
 
+                    // a network drop pauses only briefly: keep the foreground service for the resume
+                    mKeepForegroundOnPause = intent.getBooleanExtra("from_connectivity_receiver", false);
                     pause(true);
+                    mKeepForegroundOnPause = false;
                     mPausedByTransientLossOfFocus = false;
 
                     if (wasPlaying != mIsSupposedToBePlaying) {
@@ -580,6 +588,7 @@ public class MediaPlaybackService extends Service implements
     public MediaPlaybackService() {
     }
 
+    private boolean mKeepForegroundOnPause = false;
     private int mReconnectAttempts = 0;
     private static final int MAX_RECONNECT_ATTEMPTS = 10;
 
@@ -1796,12 +1805,14 @@ public class MediaPlaybackService extends Service implements
             mMediaplayerHandler.removeMessages(FADEUP);
             if (isPlaying()) {
                 mPlayer.pause();
-                if (remove_status_icon) {
+                mIsSupposedToBePlaying = false;
+                if (mKeepForegroundOnPause) {
+                    updateNotification(true);
+                } else if (remove_status_icon) {
                     gotoIdleState();
                 } else {
                     stopForeground(false);
                 }
-                mIsSupposedToBePlaying = false;
                 notifyChange(PLAYSTATE_CHANGED);
             }
             mPausedByConnectivityReceiver = false;
