@@ -32,7 +32,7 @@
     <item
         android:id="@+id/menu_item_stop"
         android:title="@string/list_menu_stop"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel" />
+        android:icon="@drawable/ic_m3_close" />
     <item
         android:id="@+id/menu_item_sleep_timer"
         android:title="@string/set_sleeptimer_label"

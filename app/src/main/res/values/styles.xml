@@ -1,112 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-/*
- * ServeStream: A HTTP stream browser/player for Android
- * Copyright 2013 William Seemann
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
--->
-<resources xmlns:tools="http://schemas.android.com/tools" >
-    
-    <style name="Theme.ServeStream.Dark" parent="@style/Theme.AppCompat">
-        <item name="android:windowBackground">@android:color/black</item>
-        <item name="ic_action_search">@drawable/ic_action_search_dark</item>
-        <item name="ic_action_new">@drawable/ic_action_new_dark</item>
-        <item name="drawer_shadow">@drawable/drawer_shadow_dark</item>
-        <item name="ic_action_volume_on">@drawable/ic_action_volume_on_dark</item>
-        <item name="ic_drawer">@drawable/ic_drawer_dark</item>
-        <item name="ic_action_accept">@drawable/ic_action_accept_dark</item>
-        <item name="ic_action_refresh">@drawable/ic_action_refresh_dark</item>
-        <item name="borderless_button">@drawable/borderless_button</item>
-        <item name="ic_action_overflow">@drawable/ic_action_overflow_dark</item>
-        <item name="ic_action_settings">@drawable/ic_action_settings_dark</item>
-        <item name="ic_action_settings_drawer">@drawable/ic_action_settings_dark</item>
-        <item name="ic_action_discard">@drawable/ic_action_settings_dark</item>
-        <item name="ic_action_cancel">@drawable/ic_action_cancel_dark</item>
-        
-        <item name="ic_av_repeat">@drawable/ic_av_repeat_dark</item>
-    	<item name="ic_av_previous">@drawable/ic_av_previous_dark</item>
-    	<item name="ic_av_pause_over_video_large">@drawable/ic_av_pause_over_video_large_dark</item>
-    	<item name="ic_av_play_over_video_large">@drawable/ic_av_play_over_video_large_dark</item>
-    	<item name="ic_av_next">@drawable/ic_av_next_dark</item>
-    	<item name="ic_av_shuffle">@drawable/ic_av_shuffle_dark</item>
-    	
-    	<item name="ic_av_play">@drawable/ic_av_play_dark</item>
-    	<item name="ic_av_pause">@drawable/ic_av_pause_dark</item>
-    	
-        <item name="media_player_metadata_color_primary">@color/media_player_metadata_color_primary_dark</item>
-        <item name="media_player_metadata_color_secondary">@color/media_player_metadata_color_primary_dark</item>
-        
-        <item name="ic_mini_controller_pause">@drawable/ic_av_pause_dark</item>
-    	<item name="ic_mini_controller_play">@drawable/ic_av_play_dark</item>
-    	<item name="ic_mini_controller_stop">@drawable/ic_av_stop</item>
-    	
-    	<item name="divider_horizontal">@android:drawable/divider_horizontal_dark</item>
-    	
-    	<item name="nav_drawer_background">#3B3B3B</item>
-    </style>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.ServeStream.DarkActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="ic_action_search">@drawable/ic_action_search_dark</item>
-        <item name="ic_action_new">@drawable/ic_action_new_dark</item>
-        <item name="drawer_shadow">@drawable/drawer_shadow_dark</item>
-        <item name="ic_drawer">@drawable/ic_drawer_light</item>
-        <item name="ic_action_volume_on">@drawable/ic_action_volume_on_dark</item>
-        <item name="ic_action_accept">@drawable/ic_action_accept_dark</item>
-        <item name="ic_action_refresh">@drawable/ic_action_refresh_dark</item>
-        <item name="borderless_button">@drawable/borderless_button</item>
-        <item name="ic_action_overflow">@drawable/ic_action_overflow_light</item>
-        <item name="ic_action_settings">@drawable/ic_action_settings_dark</item>
-        <item name="ic_action_settings_drawer">@drawable/ic_action_settings_light</item>
-        <item name="ic_action_discard">@drawable/ic_action_discard_dark</item>
-        <item name="ic_action_cancel">@drawable/ic_action_cancel_dark</item>
+    <!-- Material 3 base theme: follows the system light/dark mode and,
+         on Android 12+, the wallpaper colours (dynamic colour). -->
+    <style name="Base.Theme.ServeStream" parent="Theme.Material3.DayNight">
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="actionBarStyle">@style/Widget.ServeStream.ActionBar</item>
+        <item name="toolbarStyle">@style/Widget.Material3.Toolbar.Surface</item>
+        <item name="actionOverflowButtonStyle">@style/Widget.ServeStream.ActionButton.Overflow</item>
+        <item name="android:listDivider">@drawable/m3_divider</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.Material3.Dialog.Alert</item>
+        <item name="android:alertDialogTheme">@style/ThemeOverlay.Material3.Dialog.Alert</item>
+        <item name="floatingActionButtonStyle">@style/Widget.Material3.FloatingActionButton.Primary</item>
+
+        <!-- icons (Material Symbols, tinted by the theme) -->
+        <item name="ic_action_search">@drawable/ic_m3_search</item>
+        <item name="ic_action_new">@drawable/ic_m3_add</item>
+        <item name="drawer_shadow">@android:color/transparent</item>
+        <item name="ic_drawer">@drawable/ic_m3_menu</item>
+        <item name="ic_action_volume_on">@drawable/ic_m3_volume_up</item>
+        <item name="ic_action_accept">@drawable/ic_m3_check</item>
+        <item name="ic_action_refresh">@drawable/ic_m3_refresh</item>
+        <item name="borderless_button">@drawable/borderless_ripple</item>
+        <item name="ic_action_overflow">@drawable/ic_m3_more_vert</item>
+        <item name="ic_action_settings">@drawable/ic_m3_settings</item>
+        <item name="ic_action_settings_drawer">@drawable/ic_m3_settings</item>
+        <item name="ic_action_discard">@drawable/ic_m3_delete</item>
+        <item name="ic_action_cancel">@drawable/ic_m3_close</item>
         <item name="float_background_color">@android:color/transparent</item>
-        
-        <item name="ic_av_repeat">@drawable/ic_av_repeat_light</item>
-    	<item name="ic_av_previous">@drawable/ic_av_previous_light</item>
-    	<item name="ic_av_pause_over_video_large">@drawable/ic_av_pause_over_video_large_light</item>
-    	<item name="ic_av_play_over_video_large">@drawable/ic_av_play_over_video_large_light</item>
-    	<item name="ic_av_next">@drawable/ic_av_next_light</item>
-    	<item name="ic_av_shuffle">@drawable/ic_av_shuffle_light</item>
-    	
-    	<item name="ic_av_play">@drawable/ic_av_play_light</item>
-    	<item name="ic_av_pause">@drawable/ic_av_pause_light</item>
-    	
-        <item name="media_player_metadata_color_primary">@color/media_player_metadata_color_primary_light</item>
-        <item name="media_player_metadata_color_secondary">@color/media_player_metadata_color_primary_light</item>
-        
-        <item name="ic_mini_controller_pause">@drawable/ic_av_pause_light</item>
-    	<item name="ic_mini_controller_play">@drawable/ic_av_play_light</item>
-    	<item name="ic_mini_controller_stop">@drawable/ic_av_stop</item>
-    	
-    	<item name="divider_horizontal">@android:drawable/divider_horizontal_bright</item>
-    	
-    	<item name="nav_drawer_background">@android:color/white</item>
-    	
-    	<item name="android:actionModeCutDrawable" tools:targetApi="11">@drawable/ic_action_cut</item>
-        <item name="android:actionModeCopyDrawable" tools:targetApi="11">@drawable/ic_action_copy</item>
-        <item name="android:actionModePasteDrawable" tools:targetApi="11">@drawable/ic_action_paste</item>
-        <item name="android:actionModeSelectAllDrawable" tools:targetApi="14">@drawable/ic_action_select_all</item>
+
+        <item name="ic_av_repeat">@drawable/ic_m3_repeat</item>
+        <item name="ic_av_previous">@drawable/ic_m3_skip_previous</item>
+        <item name="ic_av_pause_over_video_large">@drawable/ic_m3_pause_circle</item>
+        <item name="ic_av_play_over_video_large">@drawable/ic_m3_play_circle</item>
+        <item name="ic_av_next">@drawable/ic_m3_skip_next</item>
+        <item name="ic_av_shuffle">@drawable/ic_m3_shuffle</item>
+        <item name="ic_av_play">@drawable/ic_m3_play</item>
+        <item name="ic_av_pause">@drawable/ic_m3_pause</item>
+
+        <item name="media_player_metadata_color_primary">?attr/colorOnSurfaceVariant</item>
+        <item name="media_player_metadata_color_secondary">?attr/colorOnSurface</item>
+        <item name="now_playing_item_color">?attr/colorPrimary</item>
+
+        <item name="ic_mini_controller_pause">@drawable/ic_m3_pause</item>
+        <item name="ic_mini_controller_play">@drawable/ic_m3_play</item>
+        <item name="ic_mini_controller_stop">@drawable/ic_m3_stop</item>
+
+        <item name="divider_horizontal">@drawable/m3_divider</item>
+        <item name="nav_drawer_background">?attr/colorSurfaceContainerLow</item>
     </style>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/blue</item>
-        <item name="colorPrimaryDark">@color/blue</item>
-        <item name="colorAccent">@color/blue</item>
-    </style>
+    <!-- Names kept from the original app so the manifest and code still resolve. -->
+    <style name="Theme.ServeStream.DarkActionBar" parent="Base.Theme.ServeStream" />
+    <style name="Theme.ServeStream.Dark" parent="Base.Theme.ServeStream" />
+    <style name="AppTheme" parent="Base.Theme.ServeStream" />
 
     <style name="Theme.ServeStream.DarkActionBar.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -114,8 +63,34 @@
         <item name="windowActionModeOverlay">true</item>
     </style>
 
-    <style name="Theme.ServeStream.DarkActionBar.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.ServeStream.Alarm" parent="Theme.ServeStream.DarkActionBar.NoActionBar" />
 
-    <style name="Theme.ServeStream.DarkActionBar.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="Theme.ServeStream.DarkActionBar.AppBarOverlay" parent="ThemeOverlay.Material3" />
+    <style name="Theme.ServeStream.DarkActionBar.PopupOverlay" parent="ThemeOverlay.Material3" />
 
+    <style name="Widget.ServeStream.ActionBar" parent="Widget.Material3.ActionBar.Solid">
+        <item name="background">?attr/colorSurface</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.ServeStream.ActionButton.Overflow" parent="Widget.AppCompat.ActionButton.Overflow">
+        <item name="srcCompat">@drawable/ic_m3_more_vert</item>
+        <item name="android:src">@drawable/ic_m3_more_vert</item>
+    </style>
+
+    <!-- List rows -->
+    <style name="TextAppearance.ServeStream.ListTitle" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="TextAppearance.ServeStream.ListSubtitle" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Widget.ServeStream.IconButton" parent="">
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">center</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+    </style>
 </resources>

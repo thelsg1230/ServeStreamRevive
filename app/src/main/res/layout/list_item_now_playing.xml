@@ -61,7 +61,7 @@
 
     <TextView
         android:id="@+id/line1"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textAppearance="?attr/textAppearanceBodyLarge"
         android:layout_width="wrap_content"
         android:paddingLeft="9dip"
         android:layout_height="wrap_content"
@@ -74,7 +74,7 @@
     <TextView
         android:id="@+id/line2"
         android:visibility="visible"
-        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
         android:singleLine="true"
         android:ellipsize="end"
         android:paddingLeft="9dip"

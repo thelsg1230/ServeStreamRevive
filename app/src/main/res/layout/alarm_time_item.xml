@@ -79,7 +79,7 @@
                 android:id="@+id/am_pm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textStyle="bold"
                 android:textColor="?android:attr/textColorPrimary" />
 
@@ -89,7 +89,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:paddingLeft="8dip"
-                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?android:attr/textColorTertiary"
                 android:textStyle="bold"
                 android:gravity="right"
@@ -102,7 +102,7 @@
             android:includeFontPadding="false"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
             android:textColor="?android:attr/textColorSecondary" />
 
     </net.sourceforge.servestream.alarm.DigitalClock>

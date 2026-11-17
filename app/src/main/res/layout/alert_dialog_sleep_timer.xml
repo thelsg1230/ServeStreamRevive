@@ -30,7 +30,7 @@
         android:layout_marginLeft="20dip"
         android:layout_marginRight="20dip"
         android:gravity="left"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:textAppearance="?attr/textAppearanceBodyLarge" />
     
     <SeekBar
     	android:id="@+id/seekbar"

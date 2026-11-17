@@ -45,7 +45,7 @@
 		    android:id="@android:id/text1"
 		    android:layout_height="wrap_content"
 		    android:layout_width="wrap_content"
-		    android:textAppearance="?android:attr/textAppearanceMedium"
+		    android:textAppearance="?attr/textAppearanceBodyLarge"
 		    android:singleLine="true"
 		    android:ellipsize="end" /> 
 		
@@ -53,7 +53,7 @@
 		    android:id="@android:id/text2"
 		    android:layout_height="wrap_content"
 		    android:layout_width="wrap_content"
-		    android:textAppearance="?android:attr/textAppearanceSmall" />
+		    android:textAppearance="?attr/textAppearanceBodyMedium" />
 		
 	</LinearLayout>
 	

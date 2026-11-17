@@ -36,7 +36,7 @@
         android:src="@drawable/ic_dialog_time" />
 
     <TextView android:id="@+id/header_time"
-        style="?android:attr/textAppearanceLarge"
+        style="?attr/textAppearanceTitleLarge"
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
         android:singleLine="true"
@@ -44,7 +44,7 @@
         android:ellipsize="none" />
 
     <TextView android:id="@+id/header_label"
-        style="?android:attr/textAppearanceLarge"
+        style="?attr/textAppearanceTitleLarge"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_marginLeft="20dip"

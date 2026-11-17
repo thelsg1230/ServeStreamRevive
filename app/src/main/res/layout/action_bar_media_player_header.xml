@@ -27,8 +27,8 @@
     	android:layout_width="match_parent"
    		android:layout_height="wrap_content"
    		android:layout_alignParentTop="true"
-   		android:textAppearance="?android:attr/textAppearanceMedium"
-   		android:textColor="@android:color/white"
+   		android:textAppearance="?attr/textAppearanceTitleMedium"
+   		android:textColor="?attr/colorOnSurface"
    		android:text="poop" />
       
     <TextView
@@ -36,8 +36,8 @@
     	android:layout_width="match_parent"
    		android:layout_height="wrap_content"
    		android:layout_below="@android:id/text1"
-   	    android:textAppearance="?android:attr/textAppearanceSmall"
-   	    android:textColor="@android:color/white"
+   	    android:textAppearance="?attr/textAppearanceBodySmall"
+   	    android:textColor="?attr/colorOnSurfaceVariant"
    		android:text="dsds" />
 
 </RelativeLayout>

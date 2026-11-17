@@ -33,7 +33,7 @@
         android:orientation="vertical">
 
         <TextView android:id="@+id/alertTitle"
-            style="?android:attr/textAppearanceLarge"
+            style="?attr/textAppearanceTitleLarge"
             android:padding="5dip"
             android:singleLine="true"
             android:ellipsize="end"
@@ -68,7 +68,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textStyle="bold"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
                 android:textColor="?android:attr/textColorPrimary"/>
 
         </net.sourceforge.servestream.alarm.DigitalClock>
