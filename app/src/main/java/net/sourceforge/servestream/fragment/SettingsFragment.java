@@ -142,13 +142,38 @@ public class SettingsFragment extends net.sourceforge.servestream.preference.Pre
         }
 	}
 	
+	private static final int REQUEST_BACKUP = 0x5b01;
+	private static final int REQUEST_RESTORE = 0x5b02;
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if ((requestCode == REQUEST_BACKUP || requestCode == REQUEST_RESTORE)) {
+			if (resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null) {
+				if (requestCode == REQUEST_BACKUP) {
+					BackupUtils.backup(getActivity(), data.getData());
+				} else {
+					BackupUtils.restore(getActivity(), data.getData());
+				}
+			}
+			return;
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+
 	@Override
 	public boolean onPreferenceTreeClick (PreferenceScreen preferenceScreen, Preference preference) {
 		if (preference.getKey() != null) {
 			if (preference.getKey().equals(PREF_BACKUP)) {
-				BackupUtils.backup(getActivity());
+				Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
+						.addCategory(Intent.CATEGORY_OPENABLE)
+						.setType("application/json")
+						.putExtra(Intent.EXTRA_TITLE, BackupUtils.SUGGESTED_NAME);
+				startActivityForResult(intent, REQUEST_BACKUP);
 			} else if (preference.getKey().equals(PREF_RESTORE)) {
-				BackupUtils.restore(getActivity());
+				Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
+						.addCategory(Intent.CATEGORY_OPENABLE)
+						.setType("*/*");
+				startActivityForResult(intent, REQUEST_RESTORE);
 			} 
 		}
 		

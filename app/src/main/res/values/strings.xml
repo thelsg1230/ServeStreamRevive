@@ -327,5 +327,10 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="backup_no_data">There are no stations to back up.</string>
+    <string name="backup_done">Backed up %d stations.</string>
+    <string name="backup_failed">Backup failed.</string>
+    <string name="restore_done">Restored %d new stations.</string>
+    <string name="restore_failed">Restore failed.</string>
 </resources>
 
