@@ -97,9 +97,6 @@ public class DetermineActionTask extends AsyncTask<Void, Void, Void> {
 	
     @Override
     protected void onPostExecute(Void result) {
-        if (URL_ACTION_BROWSE.equals(mAction) && mDebugInfo != null) {
-            Toast.makeText(mContext, "Server response: " + mDebugInfo, Toast.LENGTH_LONG).show();
-        }
         mListener.onMusicRetrieverPrepared(mAction, mUri, mList);
     }
 	

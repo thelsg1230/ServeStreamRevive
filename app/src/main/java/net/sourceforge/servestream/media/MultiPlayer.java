@@ -69,14 +69,8 @@ public final class MultiPlayer implements HTTPRequestListener {
     }
 
     private void debugToast(final String message) {
-        if (mContext == null) {
-            return;
-        }
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            public void run() {
-                Toast.makeText(mContext, message, Toast.LENGTH_LONG).show();
-            }
-        });
+        // diagnostics only go to logcat now
+        Log.d(TAG, message);
     }
     
     public void setDataSource(Context context, long id) {
@@ -339,6 +333,10 @@ public final class MultiPlayer implements HTTPRequestListener {
 				contentType.equals("audio/3gpp2")) {
 			useFFmpegPlayer = true;
 		}
+
+		// The bundled FFmpeg (with TLS) handles Shoutcast/Icecast streams that the
+		// platform player often rejects; the platform player stays as fallback.
+		useFFmpegPlayer = true;
 
 		debugToast("Content-Type: " + contentType + " (" + (useFFmpegPlayer ? "FFmpeg" : "system") + " player)");
 		setDataSource(null, path, -1, false, useFFmpegPlayer, contentType);
