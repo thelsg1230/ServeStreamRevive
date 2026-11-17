@@ -18,17 +18,17 @@
 package net.sourceforge.servestream.fragment;
 
 import android.app.AlertDialog;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.app.LoaderManager;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+import androidx.loader.app.LoaderManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;

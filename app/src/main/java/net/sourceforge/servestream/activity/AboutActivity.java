@@ -20,7 +20,7 @@ package net.sourceforge.servestream.activity;
 import net.sourceforge.servestream.R;
 import net.sourceforge.servestream.preference.UserPreferences;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
+import androidx.appcompat.app.ActionBar;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;

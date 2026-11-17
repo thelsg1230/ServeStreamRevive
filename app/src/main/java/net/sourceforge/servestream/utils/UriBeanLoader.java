@@ -23,7 +23,7 @@ import net.sourceforge.servestream.bean.UriBean;
 import net.sourceforge.servestream.database.StreamDatabase;
 
 import android.content.Context;
-import android.support.v4.content.AsyncTaskLoader;
+import androidx.loader.content.AsyncTaskLoader;
 
 /**
  * A custom Loader that loads all of the saved uris.

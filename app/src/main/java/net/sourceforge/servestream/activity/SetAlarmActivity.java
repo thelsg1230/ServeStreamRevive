@@ -20,8 +20,8 @@ package net.sourceforge.servestream.activity;
 import net.sourceforge.servestream.fragment.SetAlarmFragment;
 import net.sourceforge.servestream.preference.UserPreferences;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.appcompat.app.ActionBar;
 import android.view.MenuItem;
 
 public class SetAlarmActivity extends ActionBarActivity {

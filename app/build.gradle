@@ -1,33 +1,35 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 27
-
-    def mkfile = "NDK_APPLICATION_MK=Application.mk"
+    namespace 'net.sourceforge.servestream'
+    compileSdk 35
+    ndkVersion '22.1.7171670'
 
     defaultConfig {
         applicationId "net.sourceforge.servestream"
-        minSdkVersion 21
-        targetSdkVersion 30
-        versionName "0.7.3"
-        versionCode 114
+        minSdk 21
+        targetSdk 35
+        versionName "0.8.0"
+        versionCode 120
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
         }
     }
 
-    lintOptions {
-        //checkReleaseBuilds false
-        // Or, if you prefer, you can continue to check for errors in release builds,
-        // but continue the build even when errors are found:
-        //abortOnError false
-        disable 'MissingTranslation'
-        disable 'ExtraTranslation'
+    buildFeatures {
+        aidl true
+        buildConfig true
     }
 
-    lintOptions {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
         checkReleaseBuilds false
         abortOnError false
+        disable 'MissingTranslation', 'ExtraTranslation'
     }
 
     buildTypes {
@@ -43,47 +45,56 @@ android {
     }
 
     sourceSets.main {
-        jni.srcDirs = [] // This prevents the auto generation of Android.mk
-        jniLibs.srcDir 'src/main/libs' // This is not necessary unless you have precompiled libraries in your project.
+        jniLibs.srcDirs = ['src/main/libs']
     }
 
-    task buildFFmpeg(type: Exec, description: 'Compile FFmpeg and OpenSSL via NDK') {
-        def script = file('src/main/ffmpeg/build_ffmpeg_modern.sh').absolutePath
-        commandLine 'bash', script, android.ndkDirectory.absolutePath, 'arm64-v8a', 'armeabi-v7a'
+    packaging {
+        jniLibs {
+            useLegacyPackaging false
+        }
     }
-
-    task buildNative(type: Exec, description: 'Compile JNI source via NDK') {
-        def ndkDir = android.ndkDirectory
-        print mkfile
-        commandLine "$ndkDir/ndk-build",
-                mkfile,
-                '-C', file('src/main/jni').absolutePath, // Change src/main/jni the relative path to your jni source
-                '-j', Runtime.runtime.availableProcessors(),
-                'all',
-                'NDK_DEBUG=0'
-    }
-
-    task cleanNative(type: Exec, description: 'Clean JNI object files') {
-        def ndkDir = android.ndkDirectory
-        commandLine "$ndkDir/ndk-build",
-                '-C', file('src/main/jni').absolutePath, // Change src/main/jni the relative path to your jni source
-                'clean'
-    }
-
-    clean.dependsOn 'cleanNative'
-    buildNative.dependsOn 'buildFFmpeg'
-
-    tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn buildNative
-    }
-
 }
 
+def ndkDir = android.ndkDirectory
+
+tasks.register('buildFFmpeg', Exec) {
+    description = 'Compile FFmpeg and OpenSSL via NDK'
+    commandLine 'bash', file('src/main/ffmpeg/build_ffmpeg_modern.sh').absolutePath,
+            ndkDir.absolutePath, 'arm64-v8a', 'armeabi-v7a'
+}
+
+tasks.register('buildNative', Exec) {
+    description = 'Compile JNI source via NDK'
+    dependsOn 'buildFFmpeg'
+    commandLine "$ndkDir/ndk-build",
+            'NDK_APPLICATION_MK=Application.mk',
+            '-C', file('src/main/jni').absolutePath,
+            '-j', Runtime.runtime.availableProcessors(),
+            'all',
+            'NDK_DEBUG=0'
+}
+
+tasks.register('cleanNative', Exec) {
+    description = 'Clean JNI object files'
+    commandLine "$ndkDir/ndk-build", '-C', file('src/main/jni').absolutePath, 'clean'
+}
+
+tasks.named('preBuild') { dependsOn 'buildNative' }
+tasks.named('clean') { dependsOn 'cleanNative' }
+
 dependencies {
-    compile files('libs/jplaylistparser-0.2.5.jar')
-    compile files('libs/jsoup-1.8.1.jar')
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support:support-v4:27.1.1'
+    implementation files('libs/jplaylistparser-0.2.5.jar')
+    implementation files('libs/jsoup-1.8.1.jar')
     implementation project(':dslv')
-    implementation 'com.android.support:design:27.1.1'
+
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core:1.13.1'
+    implementation 'androidx.fragment:fragment:1.8.5'
+    implementation 'androidx.loader:loader:1.1.0'
+    implementation 'androidx.viewpager:viewpager:1.0.0'
+    implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
+    implementation 'androidx.media:media:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
 }

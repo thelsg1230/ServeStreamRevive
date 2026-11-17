@@ -21,8 +21,8 @@ import net.sourceforge.servestream.fragment.AddUrlFragment;
 import net.sourceforge.servestream.preference.UserPreferences;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBar;
+import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.ActionBar;
 import android.view.MenuItem;
 
 public class AddUrlActivity extends ActionBarActivity {

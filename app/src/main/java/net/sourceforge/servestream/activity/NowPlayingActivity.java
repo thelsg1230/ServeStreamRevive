@@ -51,7 +51,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBar;
+import androidx.appcompat.app.ActionBar;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.ContextMenu;

@@ -49,8 +49,8 @@ import android.os.SystemClock;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.support.v4.media.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
+import androidx.media.app.NotificationCompat;
+import androidx.core.app.TaskStackBuilder;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -1585,7 +1585,7 @@ public class MediaPlaybackService extends Service implements
         style.setShowCancelButton(true);
         style.setCancelButtonIntent(createPendingIntent(3, CMDSTOP));
 
-        android.support.v4.app.NotificationCompat.Builder builder = new android.support.v4.app.NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+        androidx.core.app.NotificationCompat.Builder builder = new androidx.core.app.NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setContentTitle(trackName)
                 .setContentText(contentText)
                 .setContentIntent(contentIntent)
@@ -1628,14 +1628,14 @@ public class MediaPlaybackService extends Service implements
         }
     }
 
-    private android.support.v4.app.NotificationCompat.Action createPendingIntent(int icon, String title, int requestCode, String command) {
+    private androidx.core.app.NotificationCompat.Action createPendingIntent(int icon, String title, int requestCode, String command) {
         Intent intent = new Intent(this, MediaPlaybackService.class);
         intent.setAction(MediaPlaybackService.SERVICECMD);
         intent.putExtra(MediaPlaybackService.CMDNOTIF, requestCode);
         intent.putExtra(MediaPlaybackService.CMDNAME, command);
         PendingIntent pendingIntent = PendingIntent.getService(this, requestCode, intent, 0);
 
-        return new android.support.v4.app.NotificationCompat.Action.Builder(icon, title, pendingIntent).build();
+        return new androidx.core.app.NotificationCompat.Action.Builder(icon, title, pendingIntent).build();
     }
 
     private PendingIntent createPendingIntent(int requestCode, String command) {

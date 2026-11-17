@@ -19,7 +19,7 @@ package net.sourceforge.servestream.utils;
 
 import net.sourceforge.servestream.bitmap.RecyclingImageView;
 import android.content.Context;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.util.AttributeSet;
 import android.view.View;
 

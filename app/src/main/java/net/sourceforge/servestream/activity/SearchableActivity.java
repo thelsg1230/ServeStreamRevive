@@ -11,7 +11,7 @@ import net.sourceforge.servestream.preference.UserPreferences;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
+import androidx.appcompat.app.ActionBar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
