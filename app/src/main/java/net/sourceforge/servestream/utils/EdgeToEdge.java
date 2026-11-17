@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -43,23 +42,28 @@ public final class EdgeToEdge implements Application.ActivityLifecycleCallbacks 
         controller.setAppearanceLightStatusBars(!night);
         controller.setAppearanceLightNavigationBars(!night);
 
-        // Activities with AppCompat's window action bar place that bar below the
-        // status bar themselves, so only the sides and bottom are handled here.
-        final boolean decorActionBar = activity instanceof AppCompatActivity
-                && ((AppCompatActivity) activity).getSupportActionBar() != null;
-
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars()
                     | WindowInsetsCompat.Type.displayCutout());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-            int bottom = Math.max(bars.bottom, ime.bottom);
-            if (decorActionBar) {
-                v.setPadding(bars.left, 0, bars.right, bottom);
-                return insets.inset(bars.left, 0, bars.right, bottom);
-            }
-            v.setPadding(bars.left, bars.top, bars.right, bottom);
+            v.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
             return WindowInsetsCompat.CONSUMED;
         });
+
+        // AppCompat's window action bar (not a Toolbar in the layout) no longer
+        // pushes the content down once insets are handled here, so keep the
+        // content below it by its current height.
+        final View bar = activity.findViewById(androidx.appcompat.R.id.action_bar_container);
+        final View content = activity.findViewById(android.R.id.content);
+        if (bar != null && content != null) {
+            bar.addOnLayoutChangeListener((b, l, t, r, btm, ol, ot, or, ob) -> {
+                int h = b.getVisibility() == View.VISIBLE ? b.getHeight() : 0;
+                if (content.getPaddingTop() != h) {
+                    content.setPadding(content.getPaddingLeft(), h,
+                            content.getPaddingRight(), content.getPaddingBottom());
+                }
+            });
+        }
         ViewCompat.requestApplyInsets(root);
     }
 
