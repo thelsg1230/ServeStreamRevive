@@ -29,7 +29,7 @@ public final class CrashReporter {
     private static final String FILE_NAME = "last_crash.txt";
     private static final String PREFS = "crash_reporter";
     private static final String KEY_LAST_EXIT = "last_exit_timestamp";
-    private static final int MAX_CHARS = 6000;
+    private static final int MAX_CHARS = 9000;
 
     private CrashReporter() {
     }
@@ -62,8 +62,8 @@ public final class CrashReporter {
         try {
             report = readJavaCrash(activity);
             String exit = readExitInfo(activity);
-            if (report == null) {
-                report = exit;
+            if (report == null && exit != null) {
+                report = exit + "\n\n" + readLogcat();
             }
         } catch (Throwable ignored) {
         }
@@ -182,6 +182,32 @@ public final class CrashReporter {
             return t.length() > MAX_CHARS ? t.substring(0, MAX_CHARS) : t;
         }
         return sb.toString();
+    }
+
+    /** An app can read its own (same uid) log lines, including those of its crashed process. */
+    private static String readLogcat() {
+        StringBuilder sb = new StringBuilder();
+        String[][] cmds = {
+                {"logcat", "-d", "-b", "crash", "-t", "150"},
+                {"logcat", "-d", "-t", "400", "*:W"}
+        };
+        for (String[] cmd : cmds) {
+            try {
+                Process p = Runtime.getRuntime().exec(cmd);
+                String out = new String(readAll(p.getInputStream(), 256 * 1024), "UTF-8");
+                p.destroy();
+                if (out.trim().length() > 0) {
+                    sb.append(cmd.length == 6 ? "--- crash log ---\n" : "--- recent warnings ---\n");
+                    sb.append(lastChars(out, 2500)).append("\n");
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return sb.toString();
+    }
+
+    private static String lastChars(String s, int n) {
+        return s.length() > n ? s.substring(s.length() - n) : s;
     }
 
     private static byte[] readAll(InputStream in, int limit) throws Exception {
