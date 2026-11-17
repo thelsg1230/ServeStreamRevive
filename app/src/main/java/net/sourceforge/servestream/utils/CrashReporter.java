@@ -141,7 +141,13 @@ public final class CrashReporter {
             if (reason == 5 || reason == 6) {
                 InputStream in = (InputStream) c.getMethod("getTraceInputStream").invoke(info);
                 if (in != null) {
-                    sb.append("\n").append(extractTrace(new String(readAll(in, 512 * 1024), "UTF-8")));
+                    byte[] raw = readAll(in, 4 * 1024 * 1024);
+                    String parsed = null;
+                    try {
+                        parsed = TombstoneParser.parse(raw);
+                    } catch (Throwable ignored) {
+                    }
+                    sb.append("\n").append(parsed != null ? parsed : extractTrace(new String(raw, "UTF-8")));
                 }
             }
             result = sb.toString();

@@ -69,10 +69,13 @@ void init(State **ps)
 
     if (!state) {
         state = av_mallocz(sizeof(State));
-    }
-
-    if (!state) {
-        //return FAILURE;
+        if (state) {
+            state->fd = -1;
+            state->audio_stream = -1;
+            state->video_stream = -1;
+            state->last_paused = -1;
+            state->swr_in_fmt = -1;
+        }
     }
 
     *ps = state;
