@@ -32,13 +32,29 @@ public final class AppearanceSettings {
         AppCompatDelegate.setApplicationLocales(locales);
     }
 
-    /** "system", "en" or "ko" for the language list. */
+    private static final String[] SUPPORTED = {
+            "en", "ko", "ja", "zh-CN", "zh-TW", "ru", "fr", "de", "es", "pl"};
+
+    /** Value for the language list: "system" or one of the supported tags. */
     public static String currentLanguage() {
         LocaleListCompat locales = AppCompatDelegate.getApplicationLocales();
         if (locales.isEmpty() || locales.get(0) == null) {
             return "system";
         }
-        String lang = locales.get(0).getLanguage();
-        return "ko".equals(lang) ? "ko" : "en".equals(lang) ? "en" : "system";
+        java.util.Locale l = locales.get(0);
+        String tag = l.toLanguageTag();
+        for (String s : SUPPORTED) {
+            if (s.equalsIgnoreCase(tag)) return s;
+        }
+        if ("zh".equals(l.getLanguage())) {
+            String script = l.getScript();
+            String country = l.getCountry();
+            boolean trad = "Hant".equals(script) || "TW".equals(country) || "HK".equals(country) || "MO".equals(country);
+            return trad ? "zh-TW" : "zh-CN";
+        }
+        for (String s : SUPPORTED) {
+            if (s.equals(l.getLanguage())) return s;
+        }
+        return "system";
     }
 }

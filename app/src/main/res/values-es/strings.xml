@@ -215,5 +215,48 @@
         <item quantity="other"><xliff:g id="number" example="27">%d</xliff:g> canciones agregadas a la lista.</item>
     </plurals>
     
+    <string name="action_settings">Ajustes</string>
+    <string name="autostart_label">Inicio automático</string>
+    <string name="autostart_on_bluetooth">Iniciar con Bluetooth</string>
+    <string name="back_button_label">Atrás</string>
+    <string name="backup_done">Se guardaron %d emisoras.</string>
+    <string name="backup_failed">Error en la copia de seguridad.</string>
+    <string name="backup_no_data">No hay emisoras para guardar.</string>
+    <string name="devices_label">Dispositivos</string>
+    <string name="done">Listo</string>
+    <string name="drawer_close">Cerrar menú</string>
+    <string name="drawer_open">Abrir menú</string>
+    <string name="error">Error</string>
+    <string name="language_system">Predeterminado del sistema</string>
+    <string name="list_menu_search">Buscar</string>
+    <string name="loading">Cargando…</string>
+    <string name="navigation_drawer_close">Cerrar menú</string>
+    <string name="navigation_drawer_open">Abrir menú</string>
+    <string name="next_action_title">Siguiente</string>
+    <string name="next_button_label">Siguiente</string>
+    <string name="no_alarms_label">No hay alarmas.</string>
+    <string name="no_paired_devices_label">No hay dispositivos vinculados.</string>
+    <string name="no_results_label">Sin resultados.</string>
+    <string name="ok">Aceptar</string>
+    <string name="pause">Pausa</string>
+    <string name="play">Reproducir</string>
+    <string name="pref_bluetooth_category">Bluetooth</string>
+    <string name="pref_bluetooth_options">Opciones de Bluetooth</string>
+    <string name="pref_language_title">Idioma</string>
+    <string name="pref_proxy_title">Proxy</string>
+    <string name="pref_sendbluetoothmetadata_title">Enviar metadatos</string>
+    <string name="pref_theme_title">Tema</string>
+    <string name="pref_useproxy_title">Usar proxy</string>
+    <string name="previous_action_title">Anterior</string>
+    <string name="restore_done">Se restauraron %d emisoras nuevas.</string>
+    <string name="restore_failed">Error al restaurar.</string>
+    <string name="skip_button_label">Omitir</string>
+    <string name="stop">Detener</string>
+    <string name="store_playlist_entries">Guardar cada entrada de la lista</string>
+    <string name="text_nickname_label">Escribe un nombre (opcional):</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_system">Predeterminado del sistema</string>
+    <string name="togglepause_action_title">Reproducir/Pausa</string>
 </resources>
 

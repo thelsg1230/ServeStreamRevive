@@ -215,5 +215,49 @@
         <item quantity="other"><xliff:g id="number" example="27">%d</xliff:g> musiques ajoutées à la liste.</item>
     </plurals>
     
+    <string name="action_settings">Paramètres</string>
+    <string name="autostart_label">Démarrage auto</string>
+    <string name="autostart_on_bluetooth">Démarrer avec le Bluetooth</string>
+    <string name="back_button_label">Retour</string>
+    <string name="backup_done">%d stations sauvegardées.</string>
+    <string name="backup_failed">Échec de la sauvegarde.</string>
+    <string name="backup_no_data">Aucune station à sauvegarder.</string>
+    <string name="devices_label">Appareils</string>
+    <string name="drawer_close">Fermer le menu</string>
+    <string name="drawer_open">Ouvrir le menu</string>
+    <string name="error">Erreur</string>
+    <string name="language_system">Valeur par défaut du système</string>
+    <string name="list_menu_search">Rechercher</string>
+    <string name="loading">Chargement…</string>
+    <string name="navigation_drawer_close">Fermer le menu</string>
+    <string name="navigation_drawer_open">Ouvrir le menu</string>
+    <string name="next_action_title">Suivant</string>
+    <string name="next_button_label">Suivant</string>
+    <string name="no_alarms_label">Aucune alarme.</string>
+    <string name="no_paired_devices_label">Aucun appareil associé.</string>
+    <string name="no_results_label">Aucun résultat.</string>
+    <string name="ok">OK</string>
+    <string name="pause">Pause</string>
+    <string name="play">Lecture</string>
+    <string name="pref_bluetooth_category">Bluetooth</string>
+    <string name="pref_bluetooth_options">Options Bluetooth</string>
+    <string name="pref_ffmpegplayer_summary">Utiliser le lecteur basé sur FFmpeg</string>
+    <string name="pref_ffmpegplayer_title">Lecteur FFmpeg</string>
+    <string name="pref_language_title">Langue</string>
+    <string name="pref_proxy_title">Proxy</string>
+    <string name="pref_sendbluetoothmetadata_title">Envoyer les métadonnées</string>
+    <string name="pref_theme_title">Thème</string>
+    <string name="pref_useproxy_title">Utiliser un proxy</string>
+    <string name="previous_action_title">Précédent</string>
+    <string name="restore_done">%d nouvelles stations restaurées.</string>
+    <string name="restore_failed">Échec de la restauration.</string>
+    <string name="skip_button_label">Passer</string>
+    <string name="stop">Arrêter</string>
+    <string name="store_playlist_entries">Enregistrer chaque entrée de la playlist</string>
+    <string name="text_nickname_label">Saisissez un nom (facultatif) :</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_system">Valeur par défaut du système</string>
+    <string name="togglepause_action_title">Lecture/Pause</string>
 </resources>
 

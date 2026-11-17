@@ -245,5 +245,29 @@
   <string name="eight_dollars">"8 US$"</string>
   <string name="twenty_dollars">"20 US$"</string>
 
+    <string name="action_settings">Einstellungen</string>
+    <string name="back_button_label">Zurück</string>
+    <string name="backup_done">%d Sender gesichert.</string>
+    <string name="backup_failed">Sicherung fehlgeschlagen.</string>
+    <string name="backup_no_data">Keine Sender zum Sichern vorhanden.</string>
+    <string name="error">Fehler</string>
+    <string name="language_system">Systemstandard</string>
+    <string name="loading">Wird geladen…</string>
+    <string name="navigation_drawer_close">Navigationsmenü schließen</string>
+    <string name="navigation_drawer_open">Navigationsmenü öffnen</string>
+    <string name="next_button_label">Weiter</string>
+    <string name="no_alarms_label">Keine Wecker gestellt.</string>
+    <string name="ok">OK</string>
+    <string name="pause">Pause</string>
+    <string name="play">Wiedergabe</string>
+    <string name="pref_language_title">Sprache</string>
+    <string name="pref_theme_title">Design</string>
+    <string name="restore_done">%d neue Sender wiederhergestellt.</string>
+    <string name="restore_failed">Wiederherstellung fehlgeschlagen.</string>
+    <string name="skip_button_label">Überspringen</string>
+    <string name="stop">Stopp</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_system">Systemstandard</string>
 </resources>
 

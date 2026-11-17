@@ -326,5 +326,19 @@
     <string name="failed_no_connection_trans">Połączenie z urządzeniem cast zostało utracone. Aplikacja spróbuje je ponownie ustanowić o ile to możliwe. Proszę odczekać kilka sekund i spróbować ponownie.</string>
     <string name="failed_perform_action">Nie udało się wykonać akcji</string>
     
+    <string name="backup_done">Zapisano stacje: %d.</string>
+    <string name="backup_failed">Kopia zapasowa nie powiodła się.</string>
+    <string name="backup_no_data">Brak stacji do zapisania.</string>
+    <string name="language_system">Ustawienie systemowe</string>
+    <string name="navigation_drawer_close">Zamknij menu</string>
+    <string name="navigation_drawer_open">Otwórz menu</string>
+    <string name="no_alarms_label">Brak alarmów.</string>
+    <string name="pref_language_title">Język</string>
+    <string name="pref_theme_title">Motyw</string>
+    <string name="restore_done">Przywrócono nowe stacje: %d.</string>
+    <string name="restore_failed">Przywracanie nie powiodło się.</string>
+    <string name="theme_dark">Ciemny</string>
+    <string name="theme_light">Jasny</string>
+    <string name="theme_system">Ustawienie systemowe</string>
 </resources>
 

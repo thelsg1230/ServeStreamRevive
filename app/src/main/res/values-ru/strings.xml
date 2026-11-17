@@ -216,5 +216,47 @@
         <item quantity="other"><xliff:g id="number" example="27">%d</xliff:g> песен добавлено в плей-лист.</item>
     </plurals>
     
+    <string name="action_settings">Настройки</string>
+    <string name="autostart_label">Автозапуск</string>
+    <string name="autostart_on_bluetooth">Запуск при подключении Bluetooth</string>
+    <string name="back_button_label">Назад</string>
+    <string name="backup_done">Сохранено станций: %d.</string>
+    <string name="backup_failed">Не удалось создать резервную копию.</string>
+    <string name="backup_no_data">Нет станций для резервного копирования.</string>
+    <string name="devices_label">Устройства</string>
+    <string name="drawer_close">Закрыть меню</string>
+    <string name="drawer_open">Открыть меню</string>
+    <string name="error">Ошибка</string>
+    <string name="language_system">Как в системе</string>
+    <string name="list_menu_search">Поиск</string>
+    <string name="loading">Загрузка…</string>
+    <string name="navigation_drawer_close">Закрыть меню</string>
+    <string name="navigation_drawer_open">Открыть меню</string>
+    <string name="next_action_title">Следующий</string>
+    <string name="next_button_label">Далее</string>
+    <string name="no_alarms_label">Будильники не установлены.</string>
+    <string name="no_paired_devices_label">Нет сопряжённых устройств.</string>
+    <string name="no_results_label">Ничего не найдено.</string>
+    <string name="ok">OK</string>
+    <string name="pause">Пауза</string>
+    <string name="play">Воспроизвести</string>
+    <string name="pref_bluetooth_category">Bluetooth</string>
+    <string name="pref_bluetooth_options">Параметры Bluetooth</string>
+    <string name="pref_language_title">Язык</string>
+    <string name="pref_proxy_title">Прокси</string>
+    <string name="pref_sendbluetoothmetadata_title">Отправлять метаданные</string>
+    <string name="pref_theme_title">Тема</string>
+    <string name="pref_useproxy_title">Использовать прокси</string>
+    <string name="previous_action_title">Предыдущий</string>
+    <string name="restore_done">Восстановлено новых станций: %d.</string>
+    <string name="restore_failed">Не удалось восстановить.</string>
+    <string name="skip_button_label">Пропустить</string>
+    <string name="stop">Стоп</string>
+    <string name="store_playlist_entries">Сохранять каждую запись плейлиста</string>
+    <string name="text_nickname_label">Введите название (необязательно):</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_system">Как в системе</string>
+    <string name="togglepause_action_title">Воспроизведение/пауза</string>
 </resources>
 
