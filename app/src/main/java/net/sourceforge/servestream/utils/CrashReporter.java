@@ -50,6 +50,17 @@ public final class CrashReporter {
                     out.close();
                 } catch (Throwable ignored) {
                 }
+                try {
+                    // show the report right away from a separate process
+                    android.content.Intent i = new android.content.Intent(app,
+                            net.sourceforge.servestream.activity.CrashReportActivity.class);
+                    i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                            | android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    app.startActivity(i);
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                    System.exit(10);
+                } catch (Throwable ignored) {
+                }
                 if (previous != null) {
                     previous.uncaughtException(thread, ex);
                 }
@@ -91,6 +102,15 @@ public final class CrashReporter {
                 })
                 .setNegativeButton("Close", null)
                 .show();
+    }
+
+    /** Reads and deletes the saved Java crash report, or returns null. */
+    public static String takeJavaCrash(Context context) {
+        try {
+            return readJavaCrash(context);
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     private static String readJavaCrash(Context context) throws Exception {

@@ -127,6 +127,13 @@
 		</activity>
 
 		<activity
+            android:name=".activity.CrashReportActivity"
+            android:process=":crash"
+            android:theme="@android:style/Theme.DeviceDefault"
+            android:excludeFromRecents="true"
+            android:exported="false" />
+
+		<activity
             android:name=".activity.AboutActivity"
             android:label="@string/about_pref" />
         
