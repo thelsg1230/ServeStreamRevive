@@ -522,6 +522,34 @@ public class MediaPlaybackService extends Service implements
 
             return super.onMediaButtonEvent(intent);
         }
+
+        // System media controls (quick panel, lock screen, Bluetooth) use these.
+        @Override
+        public void onPlay() {
+            play();
+        }
+
+        @Override
+        public void onPause() {
+            pause(true);
+            mPausedByTransientLossOfFocus = false;
+        }
+
+        @Override
+        public void onSkipToNext() {
+            gotoNext(true);
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            prev();
+        }
+
+        @Override
+        public void onStop() {
+            pause(true);
+            mPausedByTransientLossOfFocus = false;
+        }
     };
 
     private OnAudioFocusChangeListener mAudioFocusListener = new OnAudioFocusChangeListener() {
@@ -531,6 +559,27 @@ public class MediaPlaybackService extends Service implements
     };
 
     public MediaPlaybackService() {
+    }
+
+    private Intent scoped(Intent intent) {
+        String action = intent.getAction();
+        if (action != null && !action.startsWith("android.")
+                && intent.getPackage() == null && intent.getComponent() == null) {
+            intent.setPackage(getPackageName());
+        }
+        return intent;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void sendStickyBroadcast(Intent intent) {
+        super.sendStickyBroadcast(scoped(intent));
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void removeStickyBroadcast(Intent intent) {
+        super.removeStickyBroadcast(scoped(intent));
     }
 
     @Override

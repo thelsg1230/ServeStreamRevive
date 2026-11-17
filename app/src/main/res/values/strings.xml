@@ -332,5 +332,13 @@
     <string name="backup_failed">Backup failed.</string>
     <string name="restore_done">Restored %d new stations.</string>
     <string name="restore_failed">Restore failed.</string>
+    <string name="pref_theme_title">Theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="pref_language_title">Language</string>
+    <string name="language_system">System default</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_korean" translatable="false">한국어</string>
 </resources>
 

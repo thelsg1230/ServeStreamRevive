@@ -30,5 +30,8 @@ public class ServeStreamApp extends Application {
 		net.sourceforge.servestream.utils.EdgeToEdge.install(this);
 		com.google.android.material.color.DynamicColors.applyToActivitiesIfAvailable(this);
 		UserPreferences.createInstance(this);
+		net.sourceforge.servestream.utils.AppearanceSettings.applyTheme(
+				android.preference.PreferenceManager.getDefaultSharedPreferences(this).getString(
+						net.sourceforge.servestream.utils.AppearanceSettings.KEY_THEME, "system"));
 	}
 }

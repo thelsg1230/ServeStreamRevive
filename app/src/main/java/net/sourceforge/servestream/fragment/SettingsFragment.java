@@ -92,6 +92,27 @@ public class SettingsFragment extends net.sourceforge.servestream.preference.Pre
 
 					});
 
+			android.preference.ListPreference themePref = (android.preference.ListPreference)
+					findPreference(net.sourceforge.servestream.utils.AppearanceSettings.KEY_THEME);
+			themePref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object newValue) {
+					net.sourceforge.servestream.utils.AppearanceSettings.applyTheme((String) newValue);
+					return true;
+				}
+			});
+
+			android.preference.ListPreference languagePref = (android.preference.ListPreference)
+					findPreference(net.sourceforge.servestream.utils.AppearanceSettings.KEY_LANGUAGE);
+			languagePref.setValue(net.sourceforge.servestream.utils.AppearanceSettings.currentLanguage());
+			languagePref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object newValue) {
+					net.sourceforge.servestream.utils.AppearanceSettings.applyLanguage((String) newValue);
+					return true;
+				}
+			});
+
 			/*findPreference(PreferenceConstants.THEME).setOnPreferenceChangeListener(
                     new OnPreferenceChangeListener() {
 
