@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- prev/next were only in the old tablet mini controller; kept so the code still compiles -->
+    <item name="previousView" type="id" />
+    <item name="nextView" type="id" />
+</resources>
