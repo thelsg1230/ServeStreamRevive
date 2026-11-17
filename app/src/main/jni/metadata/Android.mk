@@ -3,7 +3,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ffmpeg_mediametadataretriever_jni
-LOCAL_CFLAGS := 
+LOCAL_CFLAGS := -Werror=return-type
 LOCAL_SRC_FILES := wseemann_media_MediaMetadataRetriever.cpp \
 	mediametadataretriever.cpp \
         ffmpeg_mediametadataretriever.c \

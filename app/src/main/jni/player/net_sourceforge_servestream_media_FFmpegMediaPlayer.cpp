@@ -1027,8 +1027,12 @@ static int register_net_sourceforge_servestream_media_FFmpegMediaPlayer(JNIEnv *
 {
     int numMethods = (sizeof(gMethods) / sizeof( (gMethods)[0]));
     jclass clazz = env->FindClass("net/sourceforge/servestream/media/FFmpegMediaPlayer");
+    if (clazz == NULL) {
+        return -1;
+    }
     jint ret = env->RegisterNatives(clazz, gMethods, numMethods);
     env->DeleteLocalRef(clazz);
+    return ret;
 }
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)

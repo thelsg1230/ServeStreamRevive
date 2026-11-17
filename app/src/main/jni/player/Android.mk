@@ -3,7 +3,7 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := ffmpeg_mediaplayer_jni
-LOCAL_CFLAGS := 
+LOCAL_CFLAGS := -Werror=return-type
 LOCAL_SRC_FILES := net_sourceforge_servestream_media_FFmpegMediaPlayer.cpp \
 		mediaplayer.cpp \
 		ffmpeg_mediaplayer.c

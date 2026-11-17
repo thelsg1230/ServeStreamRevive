@@ -100,7 +100,7 @@ static int
 initAudioTrackListener(void* clazz, int sampleRateInHz, int channelConfig, int fromThread)
 {
     MediaPlayer* mp = (MediaPlayer*) clazz;
-    mp->initAudioTrack(sampleRateInHz, channelConfig, fromThread);
+    return mp->initAudioTrack(sampleRateInHz, channelConfig, fromThread);
 }
 
 static void
