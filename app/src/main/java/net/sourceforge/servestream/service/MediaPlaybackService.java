@@ -1175,6 +1175,7 @@ public class MediaPlaybackService extends Service implements
         i.putExtra("track", getTrackName());
         i.putExtra("playing", isPlaying());
         sendStickyBroadcast(i);
+        sendBroadcast(new Intent(i));
         
         bluetoothNotifyChange(what);
 
@@ -2135,12 +2136,80 @@ public class MediaPlaybackService extends Service implements
     }
 
     public String getTrackName() {
+        String title;
+        String uri;
         synchronized (this) {
             if (mCursor == null) {
                 return null;
             }
-            return mCursor.getString(mCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+            title = mCursor.getString(mCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+            uri = mCursor.getString(mCursor.getColumnIndexOrThrow(Media.MediaColumns.URI));
         }
+        // Streams have no title of their own: show the name the user saved.
+        if (title == null || title.length() == 0 || title.equals(Media.UNKNOWN_STRING) || title.equals(uri)) {
+            String name = getStationName(uri);
+            if (name != null) {
+                return name;
+            }
+        }
+        return title;
+    }
+
+    private String mStationUri;
+    private String mStationName;
+
+    private synchronized String getStationName(String uri) {
+        if (uri == null) {
+            return null;
+        }
+        if (uri.equals(mStationUri)) {
+            return mStationName;
+        }
+        String name = null;
+        net.sourceforge.servestream.database.StreamDatabase db = null;
+        try {
+            db = new net.sourceforge.servestream.database.StreamDatabase(this);
+            android.net.Uri target = android.net.Uri.parse(uri);
+            for (net.sourceforge.servestream.bean.UriBean bean : db.getUris()) {
+                String nick = bean.getNickname();
+                if (nick != null && nick.trim().length() > 0 && sameStream(bean.getUri(), target)) {
+                    name = nick.trim();
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            Log.w(LOGTAG, "station name lookup failed", e);
+        } finally {
+            if (db != null) {
+                db.close();
+            }
+        }
+        mStationUri = uri;
+        mStationName = name;
+        return name;
+    }
+
+    private static int effectivePort(android.net.Uri u) {
+        int port = u.getPort();
+        if (port != -1) return port;
+        String s = u.getScheme();
+        if ("https".equalsIgnoreCase(s)) return 443;
+        if ("http".equalsIgnoreCase(s)) return 80;
+        return -1;
+    }
+
+    private static String normPath(String p) {
+        if (p == null || p.length() == 0) return "/";
+        return p;
+    }
+
+    private static boolean sameStream(android.net.Uri a, android.net.Uri b) {
+        if (a == null || b == null) return false;
+        return a.getScheme() != null && a.getScheme().equalsIgnoreCase(b.getScheme())
+                && a.getHost() != null && a.getHost().equalsIgnoreCase(b.getHost())
+                && effectivePort(a) == effectivePort(b)
+                && normPath(a.getPath()).equals(normPath(b.getPath()))
+                && String.valueOf(a.getQuery()).equals(String.valueOf(b.getQuery()));
     }
 
     public int getDuration() {
