@@ -65,7 +65,9 @@ public class SettingsFragment extends net.sourceforge.servestream.preference.Pre
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		
-		if (savedInstanceState == null) {
+		// Always (re)build: after a theme or language change the activity is
+		// recreated and the restored fragment starts with an empty screen.
+		{
 			addPreferencesFromResource(R.xml.preferences);
 
 			findPreference(PREF_BLUETOOTH_OPTIONS).setOnPreferenceClickListener(
