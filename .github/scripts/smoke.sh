@@ -12,7 +12,8 @@ shot() {
   sleep "${2:-5}"
   $T adb exec-out screencap -p > "/tmp/$1.png"
   echo "=====SHOT $1 BEGIN====="
-  base64 -w0 "/tmp/$1.png"; echo
+  # split into short lines: very long log lines get cut off by GitHub
+  base64 -w 3000 "/tmp/$1.png"
   echo "=====SHOT $1 END====="
 }
 
