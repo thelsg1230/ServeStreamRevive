@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wide screens (unfolded foldables, tablets): station list on the left,
+     player on the right. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:baselineAligned="false"
+    android:orientation="horizontal">
+
+    <FrameLayout
+        android:id="@+id/station_list_pane"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:background="?attr/colorSurfaceContainerLow" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:orientation="vertical">
+
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:id="@+id/player_controller"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
+
+        <SeekBar
+            android:id="@+id/seek_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:progress="0" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <TextView
+                android:id="@+id/position_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:id="@+id/duration_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/shuffle_button"
+                style="@style/Widget.ServeStream.IconButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:contentDescription="@null"
+                android:src="?attr/ic_av_shuffle" />
+
+            <net.sourceforge.servestream.button.RepeatingImageButton
+                android:id="@+id/previous_button"
+                style="@style/Widget.ServeStream.IconButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:padding="12dp"
+                android:src="?attr/ic_av_previous" />
+
+            <ImageButton
+                android:id="@+id/play_pause_button"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="?attr/ic_av_play_over_video_large" />
+
+            <net.sourceforge.servestream.button.RepeatingImageButton
+                android:id="@+id/next_button"
+                style="@style/Widget.ServeStream.IconButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:padding="12dp"
+                android:src="?attr/ic_av_next" />
+
+            <ImageButton
+                android:id="@+id/repeat_button"
+                style="@style/Widget.ServeStream.IconButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:contentDescription="@null"
+                android:src="?attr/ic_av_repeat" />
+        </LinearLayout>
+    </LinearLayout>
+
+
+    </LinearLayout>
+
+</LinearLayout>

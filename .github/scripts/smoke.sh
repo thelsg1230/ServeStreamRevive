@@ -74,11 +74,17 @@ $T adb shell settings put system user_rotation 0
 
 # --- foldable-like sizes (density 420)
 $T adb shell wm density 420
-for size in "1840x1840 fold_open_1x1" "1800x2400 fold_open_4x3" "1080x1728 fold_closed_10x16"; do
+for size in "1840x1840 fold_open_1x1 1" "1800x2400 fold_open_4x3 1" "1080x1728 fold_closed_10x16 0"; do
   set -- $size
   $T adb shell wm size "$1"
   shot "$2" 7
   check "keeps playing at $2 ($1)"
+  pane=0
+  $T adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+  $T adb shell cat /sdcard/ui.xml | grep -q 'id/station_list_pane' && pane=1
+  res="FAIL"; [ "$pane" = "$3" ] && res="PASS"
+  echo "CHECK two-pane layout at $2: station_list_pane=$pane expected=$3 -> $res"
+  RESULTS="$RESULTS\n$res  two-pane layout at $2"
 done
 $T adb shell wm size reset
 $T adb shell wm density reset

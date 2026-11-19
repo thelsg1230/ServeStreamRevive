@@ -80,6 +80,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 public class MediaPlayerActivity extends ActionBarActivity implements MusicUtils.Defs,
     		OnSharedPreferenceChangeListener,
+    		net.sourceforge.servestream.fragment.UrlListFragment.BrowseIntentListener,
     		LoadingDialogListener,
     		SleepTimerDialogListener {
 	
@@ -118,12 +119,42 @@ public class MediaPlayerActivity extends ActionBarActivity implements MusicUtils
     {
     }
 
+    private static final String STATION_LIST_TAG = "station_list_pane";
+
+    /** A station in the side list is a folder/page: browse it in the main screen. */
+    @Override
+    public void browseToUri(android.net.Uri uri) {
+        Intent intent = new Intent(this, MainActivity.class)
+                .setAction(Intent.ACTION_VIEW)
+                .setData(uri)
+                .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+    }
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle icicle) {
     	setTheme(UserPreferences.getTheme());
         super.onCreate(icicle);
         setContentView(R.layout.activity_media_player);
+
+        // Wide screens: show the station list next to the player. When the
+        // screen becomes narrow again (folding), drop the restored list so it
+        // does not look for a pane that no longer exists.
+        androidx.fragment.app.Fragment existing =
+                getSupportFragmentManager().findFragmentByTag(STATION_LIST_TAG);
+        if (findViewById(R.id.station_list_pane) != null) {
+            if (existing == null) {
+                net.sourceforge.servestream.fragment.UrlListFragment list =
+                        new net.sourceforge.servestream.fragment.UrlListFragment();
+                list.setArguments(new Bundle());
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.station_list_pane, list, STATION_LIST_TAG)
+                        .commitNow();
+            }
+        } else if (existing != null) {
+            getSupportFragmentManager().beginTransaction().remove(existing).commitNow();
+        }
         
         ActionBar actionBar = getSupportActionBar();
 		actionBar.setDisplayHomeAsUpEnabled(true);
