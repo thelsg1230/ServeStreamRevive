@@ -261,5 +261,8 @@
     <string name="togglepause_action_title">Lecture/Pause</string>
     <string name="pref_pauseonfocusloss_title">Pause pour le son d\'autres apps</string>
     <string name="pref_pauseonfocusloss_summary">Met en pause quand une autre app joue du son. Désactivez pour que la radio continue.</string>
+    <string name="set_station_image">Définir l\'image de la station</string>
+    <string name="remove_station_image">Supprimer l\'image de la station</string>
+    <string name="station_image_failed">Impossible d\'utiliser cette image.</string>
 </resources>
 

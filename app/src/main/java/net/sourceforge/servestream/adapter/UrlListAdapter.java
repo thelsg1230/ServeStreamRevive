@@ -49,6 +49,7 @@ public class UrlListAdapter extends ArrayAdapter<UriBean> {
         TextView nickname;
         TextView caption;
         ImageView overflowMenuButton;
+        ImageView image;
     }
  
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -62,6 +63,7 @@ public class UrlListAdapter extends ArrayAdapter<UriBean> {
 			holder.nickname = (TextView) convertView.findViewById(android.R.id.text1);
 			holder.caption = (TextView) convertView.findViewById(android.R.id.text2);
 			holder.overflowMenuButton = (ImageView) convertView.findViewById(R.id.overflow_menu_button);
+			holder.image = (ImageView) convertView.findViewById(R.id.station_image);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -70,6 +72,17 @@ public class UrlListAdapter extends ArrayAdapter<UriBean> {
         final UriBean uri = mRowItems.get(position);
 
 		holder.nickname.setText(uri.getNickname());
+
+		if (holder.image != null) {
+			android.graphics.Bitmap bmp = net.sourceforge.servestream.utils.StationImages.load(mContext, uri.getId());
+			if (bmp != null) {
+				holder.image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+				holder.image.setImageBitmap(bmp);
+			} else {
+				holder.image.setScaleType(ImageView.ScaleType.CENTER);
+				holder.image.setImageResource(R.drawable.ic_m3_radio);
+			}
+		}
 
 		long now = System.currentTimeMillis() / 1000;
 

@@ -32,6 +32,12 @@
         android:id="@+id/menu_item_share"
         android:title="@string/share_label" />
     <item
+        android:id="@+id/menu_item_set_image"
+        android:title="@string/set_station_image" />
+    <item
+        android:id="@+id/menu_item_remove_image"
+        android:title="@string/remove_station_image" />
+    <item
         android:id="@+id/menu_autostart_on_bluetooth"
         android:title="@string/autostart_on_bluetooth" />
 </menu>

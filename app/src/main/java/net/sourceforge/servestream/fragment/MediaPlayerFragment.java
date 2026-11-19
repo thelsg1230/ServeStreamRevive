@@ -62,6 +62,18 @@ public class MediaPlayerFragment extends Fragment implements CoverViewListener {
 	private Handler mAlbumArtHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
+			// a station image chosen by the user takes the place of album art
+			if (mService != null && getActivity() != null) {
+				try {
+					android.graphics.Bitmap station = net.sourceforge.servestream.utils.StationImages
+							.forStream(getActivity(), mService.getMediaUri());
+					if (station != null) {
+						mAlbum.setImageBitmap(station);
+						return;
+					}
+				} catch (RemoteException ignored) {
+				}
+			}
 			if (mImageFetcher != null && mService != null) {
 	        	mImageFetcher.setLoadingImage(R.drawable.albumart_mp_unknown);
 				mImageFetcher.loadImage(msg.obj, mAlbum);

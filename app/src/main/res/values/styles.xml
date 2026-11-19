@@ -95,4 +95,8 @@
     </style>
     <!-- Framework dialogs (e.g. settings lists) can't use Material3 overlays -->
     <style name="ServeStream.FrameworkDialog" parent="@android:style/Theme.DeviceDefault.Light.Dialog.Alert" />
+    <style name="ShapeAppearance.ServeStream.StationImage" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
 </resources>

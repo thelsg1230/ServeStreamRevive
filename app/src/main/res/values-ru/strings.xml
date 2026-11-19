@@ -260,5 +260,8 @@
     <string name="togglepause_action_title">Воспроизведение/пауза</string>
     <string name="pref_pauseonfocusloss_title">Пауза при звуке других приложений</string>
     <string name="pref_pauseonfocusloss_summary">Пауза, когда другое приложение воспроизводит звук. Выключите, чтобы радио продолжало играть.</string>
+    <string name="set_station_image">Выбрать изображение станции</string>
+    <string name="remove_station_image">Удалить изображение станции</string>
+    <string name="station_image_failed">Не удалось использовать это изображение.</string>
 </resources>
 

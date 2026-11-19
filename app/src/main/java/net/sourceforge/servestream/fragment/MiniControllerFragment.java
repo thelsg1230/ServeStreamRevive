@@ -175,7 +175,12 @@ public class MiniControllerFragment extends Fragment implements ServiceConnectio
 
 				mCoverart.setImageDrawable(getResources().getDrawable(R.drawable.albumart_mp_unknown_list));
 
-				if (id == -1) {
+				android.graphics.Bitmap station = net.sourceforge.servestream.utils.StationImages
+						.forStream(getActivity(), mService.getMediaUri());
+				if (station != null) {
+					mCoverart.setImageBitmap(station);
+					mCoverart.setVisibility(View.VISIBLE);
+				} else if (id == -1) {
 					//mCoverart.setVisibility(View.GONE);
 				} else {
 					mImageFetcher.loadImage(id, mCoverart);

@@ -260,5 +260,8 @@
     <string name="togglepause_action_title">Reproducir/Pausa</string>
     <string name="pref_pauseonfocusloss_title">Pausar con el audio de otras apps</string>
     <string name="pref_pauseonfocusloss_summary">Pausa cuando otra app reproduce sonido. Desactívalo para que la radio siga sonando.</string>
+    <string name="set_station_image">Elegir imagen de la emisora</string>
+    <string name="remove_station_image">Quitar imagen de la emisora</string>
+    <string name="station_image_failed">No se puede usar esta imagen.</string>
 </resources>
 

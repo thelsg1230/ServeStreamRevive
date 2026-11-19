@@ -132,4 +132,7 @@
     <string name="restore_failed">恢复失败。</string>
     <string name="pref_pauseonfocusloss_title">其他应用播放声音时暂停</string>
     <string name="pref_pauseonfocusloss_summary">其他应用播放声音时暂停。关闭后电台将继续播放。</string>
+    <string name="set_station_image">设置电台图片</string>
+    <string name="remove_station_image">删除电台图片</string>
+    <string name="station_image_failed">无法使用此图片。</string>
 </resources>

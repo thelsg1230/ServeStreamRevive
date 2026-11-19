@@ -342,5 +342,8 @@
     <string name="theme_system">Ustawienie systemowe</string>
     <string name="pref_pauseonfocusloss_title">Pauza przy dźwięku innych aplikacji</string>
     <string name="pref_pauseonfocusloss_summary">Wstrzymuje, gdy inna aplikacja odtwarza dźwięk. Wyłącz, aby radio grało dalej.</string>
+    <string name="set_station_image">Ustaw obraz stacji</string>
+    <string name="remove_station_image">Usuń obraz stacji</string>
+    <string name="station_image_failed">Nie można użyć tego obrazu.</string>
 </resources>
 

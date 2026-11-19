@@ -739,7 +739,10 @@ public class MediaPlaybackService extends Service implements
         builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, getAlbumName());
         builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, getTrackName());
         builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDuration());
-        if (mPreferences.getBoolean(PreferenceConstants.RETRIEVE_ALBUM_ART, false)) {
+        Bitmap station = net.sourceforge.servestream.utils.StationImages.forStream(this, getMediaUri());
+        if (station != null) {
+            builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, station);
+        } else if (mPreferences.getBoolean(PreferenceConstants.RETRIEVE_ALBUM_ART, false)) {
             builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, getAlbumArt(false));
         }
 
@@ -1059,7 +1062,15 @@ public class MediaPlaybackService extends Service implements
             String action = intent.getAction();
             String cmd = intent.getStringExtra("command");
 
-            if (CMDNEXT.equals(cmd) || NEXT_ACTION.equals(action)) {
+            if ("refreshnotification".equals(cmd)) {
+                // a station image was changed: refresh the lock screen / notification art
+                if (mCursor != null) {
+                    updateMediaSessionMetadata();
+                    if (isPlaying()) {
+                        updateNotification(true);
+                    }
+                }
+            } else if (CMDNEXT.equals(cmd) || NEXT_ACTION.equals(action)) {
                 gotoNext(true);
             } else if (CMDPREVIOUS.equals(cmd) || PREVIOUS_ACTION.equals(action)) {
                 if (position() < 2000) {
@@ -1713,8 +1724,13 @@ public class MediaPlaybackService extends Service implements
                 .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.albumart_mp_unknown_expanded));
                 //.setColor(Color.BLACK);
 
+        Bitmap stationImage = net.sourceforge.servestream.utils.StationImages.forStream(this, getMediaUri());
+        if (stationImage != null) {
+            builder.setLargeIcon(stationImage);
+        }
+
         int trackId = getTrackId();
-        if (mPreferences.getBoolean(PreferenceConstants.RETRIEVE_ALBUM_ART, false) && trackId != -1) {
+        if (stationImage == null && mPreferences.getBoolean(PreferenceConstants.RETRIEVE_ALBUM_ART, false) && trackId != -1) {
             Bitmap bitmap = getAlbumArt(true);
             if (bitmap != null) {
                 builder.setLargeIcon(bitmap);

@@ -135,6 +135,69 @@ public class UrlListFragment extends ListFragment implements
 		mStreamdb = new StreamDatabase(getActivity());
     }
 	
+    private UriBean mImageTarget;
+
+    private static final int REQUEST_STATION_IMAGE = 0x51a;
+
+    private void pickStationImage() {
+        Intent intent;
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            // system photo picker, no storage permission needed
+            intent = new Intent(android.provider.MediaStore.ACTION_PICK_IMAGES);
+        } else {
+            intent = new Intent(Intent.ACTION_GET_CONTENT).setType("image/*")
+                    .addCategory(Intent.CATEGORY_OPENABLE);
+        }
+        try {
+            startActivityForResult(intent, REQUEST_STATION_IMAGE);
+        } catch (android.content.ActivityNotFoundException e) {
+            startActivityForResult(new Intent(Intent.ACTION_GET_CONTENT).setType("image/*")
+                    .addCategory(Intent.CATEGORY_OPENABLE), REQUEST_STATION_IMAGE);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode != REQUEST_STATION_IMAGE) {
+            super.onActivityResult(requestCode, resultCode, data);
+            return;
+        }
+        final UriBean target = mImageTarget;
+        mImageTarget = null;
+        final Uri picked = (resultCode == Activity.RESULT_OK && data != null) ? data.getData() : null;
+        if (picked == null || target == null || getActivity() == null) {
+            return;
+        }
+        final Context app = getActivity().getApplicationContext();
+        new Thread(new Runnable() {
+            public void run() {
+                final boolean ok = net.sourceforge.servestream.utils.StationImages.save(app, target.getId(), picked);
+                mUiHandler.post(new Runnable() {
+                    public void run() {
+                        if (ok) {
+                            updateList();
+                            stationImageChanged(app);
+                        } else if (getActivity() != null) {
+                            Toast.makeText(getActivity(), R.string.station_image_failed, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private final Handler mUiHandler = new Handler(android.os.Looper.getMainLooper());
+
+    /** Lets the player, mini player and notification pick up the new image. */
+    private static void stationImageChanged(Context c) {
+        net.sourceforge.servestream.utils.Compat.sendInternal(c,
+                new Intent(net.sourceforge.servestream.service.MediaPlaybackService.META_CHANGED));
+        Intent refresh = new Intent(c, net.sourceforge.servestream.service.MediaPlaybackService.class);
+        refresh.setAction(net.sourceforge.servestream.service.MediaPlaybackService.SERVICECMD);
+        refresh.putExtra(net.sourceforge.servestream.service.MediaPlaybackService.CMDNAME, "refreshnotification");
+        net.sourceforge.servestream.utils.ServiceStarter.startServiceSafely(c, refresh);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -421,6 +484,9 @@ public class UrlListFragment extends ListFragment implements
 		if (bluetoothAdapter == null) {
 			menu.removeItem(R.id.menu_autostart_on_bluetooth);
 		}
+		if (!net.sourceforge.servestream.utils.StationImages.has(getActivity(), mSelectedMenuItem.getId())) {
+			menu.removeItem(R.id.menu_item_remove_image);
+		}
         popup.setOnMenuItemClickListener(mPopupMenuOnMenuItemClickListener);
         popup.show();
     }
@@ -444,6 +510,7 @@ public class UrlListFragment extends ListFragment implements
 					.setPositiveButton(R.string.confirm_label, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int which) {
 							mStreamdb.deleteUri(mSelectedMenuItem);
+							net.sourceforge.servestream.utils.StationImages.delete(getActivity(), mSelectedMenuItem.getId());
 							ContentResolver resolver = getActivity().getContentResolver();
 							resolver.update(
 									Alarm.Columns.CONTENT_URI,
@@ -464,6 +531,15 @@ public class UrlListFragment extends ListFragment implements
 					intent.setType("text/plain");
 					intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.share_signature, url, appName));
 					startActivity(Intent.createChooser(intent, getString(R.string.share_label)));
+					return true;
+				case R.id.menu_item_set_image:
+					mImageTarget = mSelectedMenuItem;
+					pickStationImage();
+					return true;
+				case R.id.menu_item_remove_image:
+					net.sourceforge.servestream.utils.StationImages.delete(getActivity(), mSelectedMenuItem.getId());
+					updateList();
+					stationImageChanged(getActivity().getApplicationContext());
 					return true;
 				case R.id.menu_autostart_on_bluetooth:
 			        SharedPreferences prefs = getActivity().getSharedPreferences(BluetoothOptionsActivity.PREFS_NAME, Context.MODE_PRIVATE);
