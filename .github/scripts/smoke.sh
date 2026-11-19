@@ -1,50 +1,83 @@
 #!/bin/bash
-# Installs the APK on the emulator, opens screens, and prints the log,
-# main-thread stacks (if the app hangs) and base64 screenshots to the CI log.
+# Emulator test: launches the app, plays a real radio stream with the FFmpeg
+# player, checks that playback survives going to the background, rotation and
+# foldable-like screen sizes, and prints screenshots (base64) and logs.
 APK=$(find apk -name '*.apk' | head -1)
 PKG=net.sourceforge.servestream
+STREAM="https://stream1.rcast.net/73730"
 T="timeout 60"
+RESULTS=""
 
 shot() {
-  sleep "${2:-6}"
+  sleep "${2:-5}"
   $T adb exec-out screencap -p > "/tmp/$1.png"
   echo "=====SHOT $1 BEGIN====="
   base64 -w0 "/tmp/$1.png"; echo
   echo "=====SHOT $1 END====="
 }
 
-stacks() {
-  pid=$($T adb shell pidof $PKG | tr -d '\r')
-  echo "=====STACKS $1 (pid $pid) BEGIN====="
-  if [ -n "$pid" ]; then
-    $T adb shell kill -3 "$pid"
-    sleep 3
-    f=$($T adb shell 'ls -t /data/anr/ 2>/dev/null | head -1' | tr -d '\r')
-    [ -n "$f" ] && $T adb shell cat "/data/anr/$f" | awk '/^"main"/,/^$/' | head -80
-  fi
-  echo "=====STACKS $1 END====="
+uid_of_app() { $T adb shell cmd package list packages -U $PKG | sed -n 's/.*uid:\([0-9]*\).*/\1/p' | head -1; }
+
+# 1 = our app has an AudioTrack in "started" state, 0 otherwise
+audio_playing() {
+  local uid; uid=$(uid_of_app)
+  $T adb shell dumpsys audio | grep -E "u/pid:$uid/" | grep -q "state:started" && echo 1 || echo 0
 }
 
-echo "boot done: $($T adb shell getprop sys.boot_completed)"
-$T adb root; sleep 3; $T adb wait-for-device
+check() {
+  local name="$1"
+  local alive=0; $T adb shell pidof $PKG >/dev/null && alive=1
+  local playing; playing=$(audio_playing)
+  local res="FAIL"; [ "$alive" = 1 ] && [ "$playing" = 1 ] && res="PASS"
+  echo "CHECK $name: alive=$alive audio_started=$playing -> $res"
+  RESULTS="$RESULTS\n$res  $name"
+}
+
+echo "boot done: $($T adb shell getprop sys.boot_completed), sdk $($T adb shell getprop ro.build.version.sdk)"
+$T adb shell wm size; $T adb shell wm density
 $T adb install -r -g "$APK" || exit 1
+$T adb shell appops set $PKG POST_NOTIFICATION allow
 $T adb logcat -c
 
+# --- phone portrait, station list
 $T adb shell am start -n $PKG/.activity.MainActivity
-shot main 12
-stacks main
+shot phone_main 8
 
-$T adb shell am start -a android.intent.action.SEND -t text/plain \
-  --es android.intent.extra.TEXT "https://stream1.rcast.net/73730" -n $PKG/.activity.AddUrlActivity
-shot add_url 6
+# --- play a real stream (FFmpeg + TLS)
+$T adb shell am start -a android.intent.action.VIEW -d "$STREAM" -t audio/mpeg -n $PKG/.activity.MainActivity
+sleep 25
+shot phone_player 2
+check "stream plays"
 
-$T adb shell cmd uimode night yes
+# --- background: go home, wait
+$T adb shell input keyevent KEYCODE_HOME
+sleep 30
+check "keeps playing in background (30 s)"
+
+# --- rotation
 $T adb shell am start -n $PKG/.activity.MainActivity
-shot main_dark 6
-$T adb shell cmd uimode night no
+$T adb shell settings put system accelerometer_rotation 0
+$T adb shell settings put system user_rotation 1
+shot phone_landscape 6
+check "keeps playing after rotation"
+$T adb shell settings put system user_rotation 0
+
+# --- foldable-like sizes (density 420)
+$T adb shell wm density 420
+for size in "1840x1840 fold_open_1x1" "1800x2400 fold_open_4x3" "1080x1728 fold_closed_10x16"; do
+  set -- $size
+  $T adb shell wm size "$1"
+  shot "$2" 7
+  check "keeps playing at $2 ($1)"
+done
+$T adb shell wm size reset
+$T adb shell wm density reset
 
 echo "=====LOGCAT BEGIN====="
-$T adb logcat -d -v brief | grep -iE "servestream|AndroidRuntime|FATAL|ANR|crash|Exception" | tail -n 300
+$T adb logcat -d -v brief | grep -iE "servestream|FFmpeg|AndroidRuntime|FATAL|TAG  |MediaPlayer" | grep -viE "ApkAssets|PackageConfigPersister" | tail -n 200
 echo "=====LOGCAT END====="
-$T adb shell pidof $PKG >/dev/null && echo "APP_ALIVE=yes" || echo "APP_ALIVE=no"
+
+echo "=====RESULTS BEGIN====="
+echo -e "$RESULTS"
+echo "=====RESULTS END====="
 exit 0

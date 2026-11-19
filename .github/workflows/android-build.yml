@@ -41,24 +41,27 @@ jobs:
         run: |
           yes | sdkmanager --licenses || true
           sdkmanager \
-            "platforms;android-35" \
+            "platforms;android-36" \
             "build-tools;35.0.0" \
-            "ndk;22.1.7171670"
+            "ndk;27.2.12479018"
 
       - name: Cache FFmpeg build
         uses: actions/cache@v4
         with:
           path: app/src/main/jni/ffmpeg/ffmpeg
-          key: ffmpeg-${{ hashFiles('app/src/main/ffmpeg/build_ffmpeg_modern.sh') }}
+          key: ffmpeg-ndk27.2-x86_64-${{ hashFiles('app/src/main/ffmpeg/build_ffmpeg_modern.sh') }}
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
+          gradle-version: '8.11.1'
           validate-wrappers: false
 
       - name: Build debug APK
         run: gradle assembleDebug --stacktrace
+
+      - name: Check 16 KB page alignment
+        run: bash .github/scripts/check16k.sh
 
       - name: Upload APK
         if: success()
@@ -71,7 +74,7 @@ jobs:
   smoke-test:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -91,11 +94,12 @@ jobs:
       - name: Run on emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 36
           arch: x86_64
           target: google_apis
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          profile: pixel_6
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim
           script: bash .github/scripts/smoke.sh
 
   release:
