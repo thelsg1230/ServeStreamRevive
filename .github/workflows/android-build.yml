@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Java 17
         uses: actions/setup-java@v5
@@ -109,14 +111,19 @@ jobs:
           name: ServeStream-debug
           path: apk
 
-      - name: Publish as "latest" release (direct APK link)
+      - name: Publish release (versioned APK)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          cp "$(find apk -name '*.apk' | head -1)" ServeStream.apk
+          src="$(find apk -name '*.apk' | head -1)"
+          ver="$(basename "$src" | sed -E 's/^ServeStream-([0-9.]+).*/\1/')"
+          file="ServeStream-$ver.apk"
+          cp "$src" "$file"
+          # remove the old single "latest" release from before versioned releases
           gh release delete latest --repo "$REPO" --cleanup-tag --yes || true
-          gh release create latest ServeStream.apk --repo "$REPO" \
+          gh release delete "v$ver" --repo "$REPO" --cleanup-tag --yes || true
+          gh release create "v$ver" "$file" --repo "$REPO" \
             --target "$GITHUB_SHA" --latest \
-            --title "ServeStream 2.0.0 (latest build)" \
-            --notes "Built from ${GITHUB_SHA::7}. Direct download: https://github.com/$REPO/releases/download/latest/ServeStream.apk"
+            --title "ServeStream $ver" \
+            --notes "Built from ${GITHUB_SHA::7}. Download $file below, or always the newest: https://github.com/$REPO/releases/latest"

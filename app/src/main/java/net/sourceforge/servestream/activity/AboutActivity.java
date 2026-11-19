@@ -46,7 +46,21 @@ public class AboutActivity extends ActionBarActivity {
 			}
 			
 		});
-		webview.loadUrl("file:///android_asset/about.html");
+		String html;
+		try {
+			java.io.InputStream in = getAssets().open("about.html");
+			java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+			byte[] buf = new byte[4096];
+			int n;
+			while ((n = in.read(buf)) > 0) {
+				out.write(buf, 0, n);
+			}
+			in.close();
+			html = out.toString("UTF-8").replace("{{VERSION}}", net.sourceforge.servestream.BuildConfig.VERSION_NAME);
+		} catch (java.io.IOException e) {
+			html = "ServeStream " + net.sourceforge.servestream.BuildConfig.VERSION_NAME;
+		}
+		webview.loadDataWithBaseURL("file:///android_asset/", html, "text/html", "UTF-8", null);
 	}
 	
 	@Override
