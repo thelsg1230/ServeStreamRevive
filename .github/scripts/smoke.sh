@@ -25,12 +25,21 @@ audio_playing() {
   $T adb shell dumpsys audio | grep -E "u/pid:$uid/" | grep -q "state:started" && echo 1 || echo 0
 }
 
+# 1 = the player screen shows a non-empty station/track name (or no player on screen)
+info_shown() {
+  $T adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1
+  local xml; xml=$($T adb shell cat /sdcard/ui.xml)
+  if ! echo "$xml" | grep -q 'id/trackname'; then echo 1; return; fi
+  echo "$xml" | grep -oE 'text="[^"]*" resource-id="net.sourceforge.servestream:id/trackname"' | grep -qv 'text=""' && echo 1 || echo 0
+}
+
 check() {
   local name="$1"
   local alive=0; $T adb shell pidof $PKG >/dev/null && alive=1
   local playing; playing=$(audio_playing)
-  local res="FAIL"; [ "$alive" = 1 ] && [ "$playing" = 1 ] && res="PASS"
-  echo "CHECK $name: alive=$alive audio_started=$playing -> $res"
+  local info; info=$(info_shown)
+  local res="FAIL"; [ "$alive" = 1 ] && [ "$playing" = 1 ] && [ "$info" = 1 ] && res="PASS"
+  echo "CHECK $name: alive=$alive audio_started=$playing info_shown=$info -> $res"
   RESULTS="$RESULTS\n$res  $name"
 }
 
