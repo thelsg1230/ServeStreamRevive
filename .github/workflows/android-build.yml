@@ -105,6 +105,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout changelog
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: CHANGELOG.md
+          sparse-checkout-cone-mode: false
+
       - name: Download APK
         uses: actions/download-artifact@v4
         with:
@@ -123,7 +129,10 @@ jobs:
           # remove the old single "latest" release from before versioned releases
           gh release delete latest --repo "$REPO" --cleanup-tag --yes || true
           gh release delete "v$ver" --repo "$REPO" --cleanup-tag --yes || true
+          # this version's section of CHANGELOG.md as the release notes
+          awk -v v="## $ver " 'index($0, v) == 1 {f=1; next} /^## / {f=0} f' CHANGELOG.md > notes.md || true
+          printf '\n---\n빌드 커밋 %s · 항상 최신 버전: https://github.com/%s/releases/latest\n' "${GITHUB_SHA::7}" "$REPO" >> notes.md
           gh release create "v$ver" "$file" --repo "$REPO" \
             --target "$GITHUB_SHA" --latest \
             --title "ServeStream $ver" \
-            --notes "Built from ${GITHUB_SHA::7}. Download $file below, or always the newest: https://github.com/$REPO/releases/latest"
+            --notes-file notes.md
