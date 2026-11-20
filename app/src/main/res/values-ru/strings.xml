@@ -249,6 +249,8 @@
     <string name="pref_useproxy_title">Использовать прокси</string>
     <string name="previous_action_title">Предыдущий</string>
     <string name="restore_done">Восстановлено новых станций: %d.</string>
+    <string name="backup_images">Включая изображения станций: %d.</string>
+    <string name="restore_images">Восстановлено изображений станций: %d.</string>
     <string name="restore_failed">Не удалось восстановить.</string>
     <string name="skip_button_label">Пропустить</string>
     <string name="stop">Стоп</string>

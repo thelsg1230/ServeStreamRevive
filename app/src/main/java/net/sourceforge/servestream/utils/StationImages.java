@@ -80,6 +80,53 @@ public final class StationImages {
         }
     }
 
+    /** Raw JPEG bytes of a station's image, or null if it has none (used by backup). */
+    public static byte[] readBytes(Context c, long stationId) {
+        File f = file(c, stationId);
+        if (!f.exists()) {
+            return null;
+        }
+        try {
+            java.io.FileInputStream in = new java.io.FileInputStream(f);
+            java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream((int) f.length());
+            byte[] chunk = new byte[8192];
+            int n;
+            while ((n = in.read(chunk)) > 0) {
+                buf.write(chunk, 0, n);
+            }
+            in.close();
+            return buf.toByteArray();
+        } catch (Exception e) {
+            Log.w(TAG, "could not read station image", e);
+            return null;
+        }
+    }
+
+    /** Stores image bytes taken from a backup; rejects anything that is not a decodable image. */
+    public static boolean saveBytes(Context c, long stationId, byte[] data) {
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(data, 0, data.length, bounds);
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) {
+                return false;
+            }
+            File f = file(c, stationId);
+            File dir = f.getParentFile();
+            if (dir != null && !dir.exists() && !dir.mkdirs()) {
+                return false;
+            }
+            FileOutputStream out = new FileOutputStream(f);
+            out.write(data);
+            out.close();
+            sCache.remove(stationId);
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "could not restore station image", e);
+            return false;
+        }
+    }
+
     public static void delete(Context c, long stationId) {
         //noinspection ResultOfMethodCallIgnored
         file(c, stationId).delete();

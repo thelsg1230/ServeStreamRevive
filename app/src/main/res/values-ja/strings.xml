@@ -129,6 +129,8 @@
     <string name="backup_done">%d件の放送局をバックアップしました。</string>
     <string name="backup_failed">バックアップに失敗しました。</string>
     <string name="restore_done">%d件の新しい放送局を復元しました。</string>
+    <string name="backup_images">放送局の画像 %d 件を含みます。</string>
+    <string name="restore_images">放送局の画像を %d 件復元しました。</string>
     <string name="restore_failed">復元に失敗しました。</string>
     <string name="pref_pauseonfocusloss_title">他のアプリの音声で一時停止</string>
     <string name="pref_pauseonfocusloss_summary">他のアプリが音声を再生すると一時停止します。オフにするとラジオを再生し続けます。</string>

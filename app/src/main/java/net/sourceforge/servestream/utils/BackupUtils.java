@@ -45,6 +45,8 @@ public class BackupUtils {
 	private static final String BACKUP_FILE = "backup.json";
 	private static final String ROOT_JSON_ELEMENT = "backup";
 	private static final String BACKUP_DIRECTORY_PATH = "/ServeStream/backup/";
+	/** Station image as base64 JPEG. Older versions simply ignore this key. */
+	private static final String FIELD_IMAGE = "image";
 	
 	private static void showBackupDialog(final Context context, String message) {
     	androidx.appcompat.app.AlertDialog.Builder builder;
@@ -79,8 +81,12 @@ public class BackupUtils {
 				if (out == null) {
 					throw new IOException("Cannot open " + target);
 				}
-				out.write(writeJSON(uris).getBytes("UTF-8"));
+				int[] images = new int[1];
+				out.write(writeJSON(context, uris, images).getBytes("UTF-8"));
 				message = context.getString(R.string.backup_done, uris.size());
+				if (images[0] > 0) {
+					message += "\n" + context.getString(R.string.backup_images, images[0]);
+				}
 			} catch (Exception e) {
 				message = context.getString(R.string.backup_failed) + "\n" + e.getMessage();
 			} finally {
@@ -111,15 +117,33 @@ public class BackupUtils {
 				buffer.write(chunk, 0, n);
 			}
 
-			List<UriBean> uris = parseBackup(buffer.toString("UTF-8"));
+			List<String> images = new ArrayList<String>();
+			List<UriBean> uris = parseBackup(buffer.toString("UTF-8"), images);
 			int added = 0;
+			int restoredImages = 0;
 			for (int i = 0; i < uris.size(); i++) {
-				if (TransportFactory.findUri(streamdb, uris.get(i).getUri()) == null) {
-					streamdb.saveUri(uris.get(i));
+				UriBean station = TransportFactory.findUri(streamdb, uris.get(i).getUri());
+				if (station == null) {
+					station = streamdb.saveUri(uris.get(i));
 					added++;
+				}
+				String image = images.get(i);
+				// never overwrite an image the user already set on this phone
+				if (image != null && station != null && !StationImages.has(context, station.getId())) {
+					try {
+						if (StationImages.saveBytes(context, station.getId(),
+								android.util.Base64.decode(image, android.util.Base64.DEFAULT))) {
+							restoredImages++;
+						}
+					} catch (IllegalArgumentException ignored) {
+						// damaged image data: keep the station, skip the picture
+					}
 				}
 			}
 			message = context.getString(R.string.restore_done, added);
+			if (restoredImages > 0) {
+				message += "\n" + context.getString(R.string.restore_images, restoredImages);
+			}
 		} catch (Exception e) {
 			message = context.getString(R.string.restore_failed) + "\n" + e.getMessage();
 		} finally {
@@ -133,7 +157,7 @@ public class BackupUtils {
 		showBackupDialog(context, message);
 	}
 
-	private static String writeJSON(List<UriBean> uris) throws JSONException {		
+	private static String writeJSON(Context context, List<UriBean> uris, int[] images) throws JSONException {		
 		JSONObject root = new JSONObject();
 		JSONArray array = new JSONArray();
 		JSONObject js = new JSONObject();
@@ -152,6 +176,11 @@ public class BackupUtils {
 			js.put(StreamDatabase.FIELD_STREAM_QUERY, uriBean.getQuery());
 			js.put(StreamDatabase.FIELD_STREAM_REFERENCE, uriBean.getReference());
 			js.put(StreamDatabase.FIELD_STREAM_LASTCONNECT, uriBean.getLastConnect());
+			byte[] image = StationImages.readBytes(context, uriBean.getId());
+			if (image != null) {
+				js.put(FIELD_IMAGE, android.util.Base64.encodeToString(image, android.util.Base64.NO_WRAP));
+				images[0]++;
+			}
 			array.put(js);
 		}
 			
@@ -162,7 +191,7 @@ public class BackupUtils {
 		return root.toString();
 	}
 	
-	private static List<UriBean> parseBackup(String json) throws JSONException {
+	private static List<UriBean> parseBackup(String json, List<String> images) throws JSONException {
 		List<UriBean> uris = new ArrayList<UriBean>();
 		{
 			JSONObject js = new JSONObject(json);
@@ -202,6 +231,7 @@ public class BackupUtils {
 	      		}
 	      		
 				uris.add(uriBean);
+				images.add(row.has(FIELD_IMAGE) ? row.optString(FIELD_IMAGE, null) : null);
 			}
 		}
 

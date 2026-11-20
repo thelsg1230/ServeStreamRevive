@@ -250,6 +250,8 @@
     <string name="pref_useproxy_title">Utiliser un proxy</string>
     <string name="previous_action_title">Précédent</string>
     <string name="restore_done">%d nouvelles stations restaurées.</string>
+    <string name="backup_images">Dont %d images de stations.</string>
+    <string name="restore_images">%d images de stations restaurées.</string>
     <string name="restore_failed">Échec de la restauration.</string>
     <string name="skip_button_label">Passer</string>
     <string name="stop">Arrêter</string>
