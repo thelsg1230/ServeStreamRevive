@@ -54,7 +54,7 @@ public class ShortcutActivity extends ActionBarActivity {
 				contents.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				
 				// create shortcut if requested
-				ShortcutIconResource icon = Intent.ShortcutIconResource.fromContext(ShortcutActivity.this, R.drawable.ic_launcher);
+				ShortcutIconResource icon = Intent.ShortcutIconResource.fromContext(ShortcutActivity.this, R.drawable.app_logo);
 
 				Intent intent = new Intent();
 				intent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, contents);

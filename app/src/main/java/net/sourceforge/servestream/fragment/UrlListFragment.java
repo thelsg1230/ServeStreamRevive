@@ -135,7 +135,8 @@ public class UrlListFragment extends ListFragment implements
 		mStreamdb = new StreamDatabase(getActivity());
     }
 	
-    private UriBean mImageTarget;
+    private long mImageTarget = -1;
+    private static final String STATE_IMAGE_TARGET = "station_image_target";
 
     private static final int REQUEST_STATION_IMAGE = 0x51a;
 
@@ -162,16 +163,16 @@ public class UrlListFragment extends ListFragment implements
             super.onActivityResult(requestCode, resultCode, data);
             return;
         }
-        final UriBean target = mImageTarget;
-        mImageTarget = null;
+        final long target = mImageTarget;
+        mImageTarget = -1;
         final Uri picked = (resultCode == Activity.RESULT_OK && data != null) ? data.getData() : null;
-        if (picked == null || target == null || getActivity() == null) {
+        if (picked == null || target < 0 || getActivity() == null) {
             return;
         }
         final Context app = getActivity().getApplicationContext();
         new Thread(new Runnable() {
             public void run() {
-                final boolean ok = net.sourceforge.servestream.utils.StationImages.save(app, target.getId(), picked);
+                final boolean ok = net.sourceforge.servestream.utils.StationImages.save(app, target, picked);
                 mUiHandler.post(new Runnable() {
                     public void run() {
                         if (ok) {
@@ -199,10 +200,20 @@ public class UrlListFragment extends ListFragment implements
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong(STATE_IMAGE_TARGET, mImageTarget);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         setRetainInstance(true);
+        if (savedInstanceState != null && mImageTarget < 0) {
+            // the picker may outlive our process (big photo apps, low memory)
+            mImageTarget = savedInstanceState.getLong(STATE_IMAGE_TARGET, -1);
+        }
     }
 	
 	@Override
@@ -533,7 +544,7 @@ public class UrlListFragment extends ListFragment implements
 					startActivity(Intent.createChooser(intent, getString(R.string.share_label)));
 					return true;
 				case R.id.menu_item_set_image:
-					mImageTarget = mSelectedMenuItem;
+					mImageTarget = mSelectedMenuItem.getId();
 					pickStationImage();
 					return true;
 				case R.id.menu_item_remove_image:

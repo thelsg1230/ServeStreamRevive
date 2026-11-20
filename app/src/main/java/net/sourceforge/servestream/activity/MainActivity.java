@@ -213,6 +213,8 @@ public class MainActivity extends AppCompatActivity implements
     
     @Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+	    // hand results on to fragments (e.g. the station image picker)
+	    super.onActivityResult(requestCode, resultCode, intent);
 	    if (requestCode == 0) {
 	        if (resultCode == RESULT_OK) {
 	            String contents = intent.getStringExtra("SCAN_RESULT");
