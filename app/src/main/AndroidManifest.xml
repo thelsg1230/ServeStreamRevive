@@ -226,9 +226,23 @@
 
 		<service
 		    android:name=".service.MediaPlaybackService"
-		    android:exported="false"
+		    android:exported="true"
 		    android:foregroundServiceType="mediaPlayback"
-			android:description="@string/media_service_desc" />
+			android:description="@string/media_service_desc">
+			<!-- Android Auto / media browsers: saved stations and playback controls -->
+			<intent-filter>
+				<action android:name="android.media.browse.MediaBrowserService" />
+			</intent-filter>
+		</service>
+
+		<provider
+		    android:name=".provider.StationImageProvider"
+		    android:authorities="${applicationId}.stationimages"
+		    android:exported="true" />
+
+		<meta-data
+		    android:name="com.google.android.gms.car.application"
+		    android:resource="@xml/automotive_app_desc" />
 
         <activity
             android:name=".activity.MediaPlayerActivity"

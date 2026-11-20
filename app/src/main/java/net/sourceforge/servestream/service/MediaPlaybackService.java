@@ -21,6 +21,7 @@ import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
@@ -60,12 +61,15 @@ import android.widget.Toast;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Vector;
 
 import net.sourceforge.servestream.R;
 import net.sourceforge.servestream.activity.MediaPlayerActivity;
 import net.sourceforge.servestream.bean.UriBean;
+import net.sourceforge.servestream.database.StreamDatabase;
 import net.sourceforge.servestream.bitmap.DatabaseImageResizer;
 import net.sourceforge.servestream.bitmap.ImageCache;
 import net.sourceforge.servestream.media.Metadata;
@@ -79,6 +83,7 @@ import net.sourceforge.servestream.receiver.MediaButtonIntentReceiver;
 import net.sourceforge.servestream.transport.AbsTransport;
 import net.sourceforge.servestream.transport.TransportFactory;
 import net.sourceforge.servestream.utils.DetermineActionTask;
+import net.sourceforge.servestream.utils.AutoLibrary;
 import net.sourceforge.servestream.utils.MusicUtils;
 import net.sourceforge.servestream.preference.PreferenceConstants;
 import net.sourceforge.servestream.utils.Utils;
@@ -87,7 +92,7 @@ import net.sourceforge.servestream.utils.Utils;
  * Provides "background" audio playback capabilities, allowing the
  * user to switch between activities without stopping playback.
  */
-public class MediaPlaybackService extends Service implements 
+public class MediaPlaybackService extends androidx.media.MediaBrowserServiceCompat implements 
 		OnSharedPreferenceChangeListener,
 		MetadataRetrieverListener,
 		DetermineActionTask.MusicRetrieverPreparedListener {
@@ -577,7 +582,109 @@ public class MediaPlaybackService extends Service implements
             pause(true);
             mPausedByTransientLossOfFocus = false;
         }
+
+        // Android Auto: a station picked from the list
+        @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            playStation(AutoLibrary.findByMediaId(MediaPlaybackService.this, mediaId));
+        }
+
+        // Voice: "play <station> on ServeStream"
+        @Override
+        public void onPlayFromSearch(String query, Bundle extras) {
+            playStation(AutoLibrary.search(MediaPlaybackService.this, query));
+        }
     };
+
+    private static boolean isBrowserIntent(Intent intent) {
+        return intent != null && SERVICE_INTERFACE.equals(intent.getAction());
+    }
+
+    @Override
+    public BrowserRoot onGetRoot(String clientPackageName, int clientUid, Bundle rootHints) {
+        return new BrowserRoot(AutoLibrary.ROOT_ID, AutoLibrary.rootExtras());
+    }
+
+    @Override
+    public void onLoadChildren(final String parentId,
+            final Result<List<android.support.v4.media.MediaBrowserCompat.MediaItem>> result) {
+        if (!AutoLibrary.ROOT_ID.equals(parentId)) {
+            result.sendResult(new ArrayList<android.support.v4.media.MediaBrowserCompat.MediaItem>());
+            return;
+        }
+        result.detach();
+        final Context app = getApplicationContext();
+        new Thread(new Runnable() {
+            public void run() {
+                List<android.support.v4.media.MediaBrowserCompat.MediaItem> items;
+                try {
+                    items = AutoLibrary.stations(app);
+                } catch (Exception e) {
+                    Log.w(LOGTAG, "could not load stations for media browser", e);
+                    items = new ArrayList<android.support.v4.media.MediaBrowserCompat.MediaItem>();
+                }
+                result.sendResult(items);
+            }
+        }, "AutoLibrary").start();
+    }
+
+    private DetermineActionTask mStationTask;
+
+    /** Opens a saved station the same way tapping it in the app's list does. */
+    private void playStation(final UriBean station) {
+        if (station == null) {
+            setErrorStatus(getString(R.string.url_not_opened_message));
+            return;
+        }
+        if (mStationTask != null) {
+            mStationTask.cancel(true);
+        }
+        // keep running after the car / assistant disconnects
+        net.sourceforge.servestream.utils.ServiceStarter.startServiceSafely(this,
+                new Intent(this, MediaPlaybackService.class));
+
+        PlaybackStateCompat.Builder connecting = new PlaybackStateCompat.Builder()
+                .setState(PlaybackStateCompat.STATE_CONNECTING, 0, 1.0f)
+                .setActions(sessionActions());
+        mediaSession.setPlaybackState(connecting.build());
+
+        mStationTask = new DetermineActionTask(this, station,
+                new DetermineActionTask.MusicRetrieverPreparedListener() {
+                    public void onMusicRetrieverPrepared(String action, UriBean uri, long[] list) {
+                        mStationTask = null;
+                        if (DetermineActionTask.URL_ACTION_PLAY.equals(action) && list != null && list.length > 0) {
+                            if (mPreferences.getBoolean(PreferenceConstants.AUTOSAVE, true)) {
+                                StreamDatabase db = new StreamDatabase(MediaPlaybackService.this);
+                                db.touchUri(uri);
+                                db.close();
+                            }
+                            open(list, 0);
+                        } else {
+                            setErrorStatus(getString(R.string.url_not_opened_message));
+                        }
+                    }
+                });
+        mStationTask.execute();
+    }
+
+    private void setErrorStatus(String message) {
+        mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
+                .setState(PlaybackStateCompat.STATE_ERROR, 0, 0f)
+                .setErrorMessage(PlaybackStateCompat.ERROR_CODE_APP_ERROR, message)
+                .setActions(sessionActions())
+                .build());
+    }
+
+    private static long sessionActions() {
+        return PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                | PlaybackStateCompat.ACTION_PLAY
+                | PlaybackStateCompat.ACTION_PAUSE
+                | PlaybackStateCompat.ACTION_PLAY_PAUSE
+                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                | PlaybackStateCompat.ACTION_STOP
+                | PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
+                | PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH;
+    }
 
     private OnAudioFocusChangeListener mAudioFocusListener = new OnAudioFocusChangeListener() {
         public void onAudioFocusChange(int focusChange) {
@@ -693,6 +800,9 @@ public class MediaPlaybackService extends Service implements
             ex.printStackTrace();
         }
 
+        // Android Auto and other media browsers attach to this session
+        setSessionToken(mediaSession.getSessionToken());
+
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mPreferences.registerOnSharedPreferenceChangeListener(this);
 
@@ -739,6 +849,12 @@ public class MediaPlaybackService extends Service implements
         builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, getAlbumName());
         builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, getTrackName());
         builder.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDuration());
+        UriBean saved = net.sourceforge.servestream.utils.StationImages.findStation(this, getMediaUri());
+        if (saved != null) {
+            builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, AutoLibrary.mediaIdFor(saved.getId()));
+            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI,
+                    AutoLibrary.iconFor(this, saved.getId()).toString());
+        }
         Bitmap station = net.sourceforge.servestream.utils.StationImages.forStream(this, getMediaUri());
         if (station != null) {
             builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, station);
@@ -760,11 +876,7 @@ public class MediaPlaybackService extends Service implements
             state = PlaybackStateCompat.STATE_PAUSED;
         }
         sessionState.setState(state, 1, 1.0f);
-        sessionState.setActions(PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
-                | PlaybackStateCompat.ACTION_PLAY
-                | PlaybackStateCompat.ACTION_PAUSE
-                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                | PlaybackStateCompat.ACTION_STOP);
+        sessionState.setActions(sessionActions());
         mediaSession.setPlaybackState(sessionState.build());
     }
 
@@ -1042,6 +1154,10 @@ public class MediaPlaybackService extends Service implements
 
     @Override
     public IBinder onBind(Intent intent) {
+        if (isBrowserIntent(intent)) {
+            // Android Auto / media browsers: library + session, not the app's own interface
+            return super.onBind(intent);
+        }
         mDelayedStopHandler.removeCallbacksAndMessages(null);
         mServiceInUse = true;
         return mBinder;
@@ -1124,6 +1240,9 @@ public class MediaPlaybackService extends Service implements
     
     @Override
     public boolean onUnbind(Intent intent) {
+        if (isBrowserIntent(intent)) {
+            return false;
+        }
         mServiceInUse = false;
 
         // Take a snapshot of the current playlist
@@ -2384,6 +2503,16 @@ public class MediaPlaybackService extends Service implements
             mService = new WeakReference<MediaPlaybackService>(service);
         }
 
+        // The service is exported for Android Auto; its own control interface stays app-only.
+        @Override
+        public boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags)
+                throws android.os.RemoteException {
+            if (android.os.Binder.getCallingUid() != android.os.Process.myUid()) {
+                throw new SecurityException("not allowed");
+            }
+            return super.onTransact(code, data, reply, flags);
+        }
+
         public void openFile(String path)
         {
             mService.get().open(path);
@@ -2495,7 +2624,7 @@ public class MediaPlaybackService extends Service implements
     }
 
     @Override
-    protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
+    public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         writer.println("" + mPlayListLen + " items in queue, currently at index " + mPlayPos);
         writer.println("Currently loaded:");
         writer.println(getArtistName());

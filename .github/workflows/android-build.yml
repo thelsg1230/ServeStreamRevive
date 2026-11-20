@@ -58,7 +58,7 @@ jobs:
           validate-wrappers: false
 
       - name: Build debug APK
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleDebug :app:assembleDebugAndroidTest --stacktrace
 
       - name: Check 16 KB page alignment
         run: bash .github/scripts/check16k.sh
@@ -69,6 +69,14 @@ jobs:
         with:
           name: ServeStream-debug
           path: '**/build/outputs/apk/debug/*.apk'
+          if-no-files-found: error
+
+      - name: Upload test APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ServeStream-test
+          path: app/build/outputs/apk/androidTest/debug/*.apk
           if-no-files-found: error
 
   smoke-test:
@@ -84,6 +92,12 @@ jobs:
         with:
           name: ServeStream-debug
           path: apk
+
+      - name: Download test APK
+        uses: actions/download-artifact@v4
+        with:
+          name: ServeStream-test
+          path: testapk
 
       - name: Enable KVM
         run: |

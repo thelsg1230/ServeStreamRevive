@@ -89,6 +89,21 @@ done
 $T adb shell wm size reset
 $T adb shell wm density reset
 
+# --- Android Auto: connect like the car does (media browser), list stations, play
+TESTAPK=$(find testapk -name '*.apk' | head -1)
+$T adb install -r -g "$TESTAPK"
+for t in "a_stationListShowsSavedStationsWithImages Android Auto: station list with images" \
+         "b_playFromStationList Android Auto: play a station from the list" \
+         "c_playFromVoiceSearch Android Auto: play by voice search"; do
+  set -- $t; m=$1; shift
+  out=$(timeout 180 adb shell am instrument -w -e class net.sourceforge.servestream.AutoBrowseTest#$m \
+        $PKG.test/androidx.test.runner.AndroidJUnitRunner 2>&1)
+  echo "$out" | tail -n 30
+  res="FAIL"; echo "$out" | grep -q "^OK (1 test)" && res="PASS"
+  echo "CHECK $*: -> $res"
+  RESULTS="$RESULTS\n$res  $*"
+done
+
 echo "=====LOGCAT BEGIN====="
 $T adb logcat -d -v brief | grep -iE "servestream|FFmpeg|AndroidRuntime|FATAL|TAG  |MediaPlayer" | grep -viE "ApkAssets|PackageConfigPersister" | tail -n 200
 echo "=====LOGCAT END====="

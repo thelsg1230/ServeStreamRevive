@@ -1,7 +1,7 @@
 #!/bin/bash
 # Fails if any native library or the APK itself is not aligned for 16 KB pages.
 set -u
-APK=$(find app/build/outputs/apk -name '*.apk' | head -1)
+APK=$(find app/build/outputs/apk/debug -name '*.apk' | head -1)
 NDK="$ANDROID_HOME/ndk/27.2.12479018"
 READELF="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
 ZIPALIGN=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)zipalign
