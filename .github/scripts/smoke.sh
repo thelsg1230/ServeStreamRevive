@@ -94,7 +94,8 @@ TESTAPK=$(find testapk -name '*.apk' | head -1)
 $T adb install -r -g "$TESTAPK"
 for t in "a_stationListShowsSavedStationsWithImages Android Auto: station list with images" \
          "b_playFromStationList Android Auto: play a station from the list" \
-         "c_playFromVoiceSearch Android Auto: play by voice search"; do
+         "c_playFromVoiceSearch Android Auto: play by voice search" \
+         "d_skipButtonsSwitchStations Android Auto: skip buttons switch saved stations"; do
   set -- $t; m=$1; shift
   out=$(timeout 180 adb shell am instrument -w -e class net.sourceforge.servestream.AutoBrowseTest#$m \
         $PKG.test/androidx.test.runner.AndroidJUnitRunner 2>&1)

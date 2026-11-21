@@ -460,9 +460,9 @@ public class MediaPlaybackService extends androidx.media.MediaBrowserServiceComp
             String action = intent.getAction();
             String cmd = intent.getStringExtra("command");
             if (CMDNEXT.equals(cmd) || NEXT_ACTION.equals(action)) {
-                gotoNext(true);
+                userNext();
             } else if (CMDPREVIOUS.equals(cmd) || PREVIOUS_ACTION.equals(action)) {
-                prev();
+                userPrev();
             } else if (CMDTOGGLEPAUSE.equals(cmd) || TOGGLEPAUSE_ACTION.equals(action)) {
             	if (intent.getBooleanExtra("from_connectivity_receiver", false) && !mPausedByConnectivityReceiver) {
             		return;
@@ -511,9 +511,9 @@ public class MediaPlaybackService extends androidx.media.MediaBrowserServiceComp
                 //MusicUtils.debugLog("onStartCommand " + action + " / " + cmd);
 
                 if (CMDNEXT.equals(cmd) || NEXT_ACTION.equals(action)) {
-                    gotoNext(true);
+                    userNext();
                 } else if (CMDPREVIOUS.equals(cmd) || PREVIOUS_ACTION.equals(action)) {
-                    prev();
+                    userPrev();
                 } else if (CMDTOGGLEPAUSE.equals(cmd) || TOGGLEPAUSE_ACTION.equals(action)) {
                     if (intent.getBooleanExtra("from_connectivity_receiver", false) && !mPausedByConnectivityReceiver) {
                         return super.onMediaButtonEvent(intent);
@@ -569,12 +569,12 @@ public class MediaPlaybackService extends androidx.media.MediaBrowserServiceComp
 
         @Override
         public void onSkipToNext() {
-            gotoNext(true);
+            userNext();
         }
 
         @Override
         public void onSkipToPrevious() {
-            prev();
+            userPrev();
         }
 
         @Override
@@ -629,6 +629,58 @@ public class MediaPlaybackService extends androidx.media.MediaBrowserServiceComp
     }
 
     private DetermineActionTask mStationTask;
+
+    /** Next button: next track, or the next saved station while a single station plays. */
+    public void userNext() {
+        if (!switchStation(1)) {
+            gotoNext(true);
+        }
+    }
+
+    /** Previous button: previous track, or the previous saved station while a single station plays. */
+    public void userPrev() {
+        if (!switchStation(-1)) {
+            prev();
+        }
+    }
+
+    /**
+     * With one saved station in the queue (normal radio listening), skipping moves
+     * through the saved station list in its on-screen order, wrapping around.
+     * Returns false when the queue holds a real playlist or nothing saved is playing.
+     */
+    private boolean switchStation(int direction) {
+        if (mPlayListLen > 1) {
+            return false;
+        }
+        UriBean current = net.sourceforge.servestream.utils.StationImages.findStation(this, getMediaUri());
+        if (current == null) {
+            return false;
+        }
+        List<UriBean> stations;
+        StreamDatabase db = new StreamDatabase(this);
+        try {
+            stations = db.getUris();
+        } finally {
+            db.close();
+        }
+        if (stations.size() < 2) {
+            return false;
+        }
+        int index = -1;
+        for (int i = 0; i < stations.size(); i++) {
+            if (stations.get(i).getId() == current.getId()) {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0) {
+            return false;
+        }
+        int size = stations.size();
+        playStation(stations.get(((index + direction) % size + size) % size));
+        return true;
+    }
 
     /** Opens a saved station the same way tapping it in the app's list does. */
     private void playStation(final UriBean station) {
@@ -1187,9 +1239,11 @@ public class MediaPlaybackService extends androidx.media.MediaBrowserServiceComp
                     }
                 }
             } else if (CMDNEXT.equals(cmd) || NEXT_ACTION.equals(action)) {
-                gotoNext(true);
+                userNext();
             } else if (CMDPREVIOUS.equals(cmd) || PREVIOUS_ACTION.equals(action)) {
-                if (position() < 2000) {
+                if (switchStation(-1)) {
+                    // a single radio station: previous saved station
+                } else if (position() < 2000) {
                     prev();
                 } else {
                     seek(0);
@@ -2539,10 +2593,10 @@ public class MediaPlaybackService extends androidx.media.MediaBrowserServiceComp
             mService.get().play();
         }
         public void prev() {
-            mService.get().prev();
+            mService.get().userPrev();
         }
         public void next() {
-            mService.get().gotoNext(true);
+            mService.get().userNext();
         }
         public String getTrackName() {
             return mService.get().getTrackName();

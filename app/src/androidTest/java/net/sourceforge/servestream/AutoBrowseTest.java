@@ -143,6 +143,23 @@ public class AutoBrowseTest {
         fail("playback state " + last + ", wanted " + wanted);
     }
 
+    /** Waits until the given station is the one playing (media id matches and state is PLAYING). */
+    private void waitForStation(UriBean wanted, long timeoutMs) {
+        String id = AutoLibrary.mediaIdFor(wanted.getId());
+        String got = null;
+        int state = -1;
+        long end = SystemClock.elapsedRealtime() + timeoutMs;
+        while (SystemClock.elapsedRealtime() < end) {
+            MediaMetadataCompat meta = controller.getMetadata();
+            got = meta == null ? null : meta.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+            PlaybackStateCompat s = controller.getPlaybackState();
+            state = s == null ? -1 : s.getState();
+            if (id.equals(got) && state == PlaybackStateCompat.STATE_PLAYING) return;
+            SystemClock.sleep(500);
+        }
+        fail("wanted " + id + " playing, got " + got + " in state " + state);
+    }
+
     private void pauseIfPlaying() {
         PlaybackStateCompat s = controller.getPlaybackState();
         if (s != null && s.getState() == PlaybackStateCompat.STATE_PLAYING) {
@@ -203,5 +220,36 @@ public class AutoBrowseTest {
         String query = name.substring(0, Math.min(name.length(), 6)).toUpperCase();
         controller.getTransportControls().playFromSearch(query, null);
         waitForState(PlaybackStateCompat.STATE_PLAYING, 60000);
+    }
+
+    @Test
+    public void d_skipButtonsSwitchStations() {
+        // a second saved station right after the first one
+        Uri second = Uri.parse(STREAM + "?ch=2");
+        StreamDatabase db = new StreamDatabase(ctx);
+        UriBean other = TransportFactory.findUri(db, second);
+        if (other == null) {
+            other = TransportFactory.getTransport("https").createUri(second);
+            other.setNickname(NAME + " 2");
+            other = db.saveUri(other);
+        }
+        List<UriBean> all = db.getUris();
+        db.close();
+        int i = -1;
+        for (int k = 0; k < all.size(); k++) {
+            if (all.get(k).getId() == station.getId()) i = k;
+        }
+        assertTrue(i >= 0);
+        UriBean next = all.get((i + 1) % all.size());
+        UriBean prev = all.get((i - 1 + all.size()) % all.size());
+
+        controller.getTransportControls().playFromMediaId(AutoLibrary.mediaIdFor(station.getId()), null);
+        waitForStation(station, 60000);
+        controller.getTransportControls().skipToNext();
+        waitForStation(next, 60000);
+        controller.getTransportControls().skipToPrevious();
+        waitForStation(station, 60000);
+        controller.getTransportControls().skipToPrevious();
+        waitForStation(prev, 60000);
     }
 }
