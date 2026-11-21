@@ -333,6 +333,7 @@
     <string name="restore_done">Restored %d new stations.</string>
     <string name="backup_images">Including %d station images.</string>
     <string name="restore_images">Restored %d station images.</string>
+    <string name="restore_no_images">This backup file has no station images (made before version 2.4.6?).</string>
     <string name="restore_failed">Restore failed.</string>
     <string name="pref_theme_title">Theme</string>
     <string name="theme_system">System default</string>

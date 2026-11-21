@@ -1,0 +1,111 @@
+package net.sourceforge.servestream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.net.Uri;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
+
+import net.sourceforge.servestream.bean.UriBean;
+import net.sourceforge.servestream.database.StreamDatabase;
+import net.sourceforge.servestream.transport.TransportFactory;
+import net.sourceforge.servestream.utils.BackupUtils;
+import net.sourceforge.servestream.utils.StationImages;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
+/** Backup file round trip with station images, through a real file like the system file picker. */
+@RunWith(AndroidJUnit4.class)
+public class BackupImageTest {
+    private static final String STREAM = "https://stream1.rcast.net/73730?backuptest=1";
+
+    private Context ctx;
+    private UriBean station;
+    private File backup;
+
+    @Before
+    public void setUp() throws Exception {
+        ctx = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        station = ensureStation();
+        // a big photo-like picture, like one picked from the gallery (saved at up to 1024 px)
+        Bitmap bmp = Bitmap.createBitmap(1024, 1024, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bmp);
+        Paint p = new Paint();
+        for (int i = 0; i < 64; i++) {
+            p.setColor(Color.rgb(i * 4, 255 - i * 4, (i * 37) % 256));
+            canvas.drawCircle((i * 97) % 1024, (i * 53) % 1024, 40 + i * 3, p);
+        }
+        ByteArrayOutputStream jpeg = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.JPEG, 90, jpeg);
+        StationImages.delete(ctx, station.getId());
+        assertTrue(StationImages.saveBytes(ctx, station.getId(), jpeg.toByteArray()));
+
+        backup = new File(ctx.getCacheDir(), "servestream-backup.json");
+        FileOutputStream out = new FileOutputStream(backup);
+        BackupUtils.Counts written = BackupUtils.writeBackup(ctx, out);
+        out.close();
+        assertTrue("no image written to the backup", written.images >= 1);
+        assertTrue(backup.length() > 100000);
+    }
+
+    private UriBean ensureStation() {
+        StreamDatabase db = new StreamDatabase(ctx);
+        UriBean b = TransportFactory.findUri(db, Uri.parse(STREAM));
+        if (b == null) {
+            b = TransportFactory.getTransport("https").createUri(Uri.parse(STREAM));
+            b.setNickname("Backup Test Radio");
+            b = db.saveUri(b);
+        }
+        db.close();
+        return b;
+    }
+
+    private BackupUtils.Counts restore() throws Exception {
+        InputStream in = ctx.getContentResolver().openInputStream(Uri.fromFile(backup));
+        try {
+            return BackupUtils.readBackup(ctx, in);
+        } finally {
+            in.close();
+        }
+    }
+
+    @Test
+    public void imageComesBackAfterRemovingIt() throws Exception {
+        StationImages.delete(ctx, station.getId());
+        assertFalse(StationImages.has(ctx, station.getId()));
+        BackupUtils.Counts c = restore();
+        assertTrue("restore did not bring the image back (in file: " + c.imagesInFile + ")", c.images >= 1);
+        assertNotNull(StationImages.load(ctx, station.getId()));
+    }
+
+    @Test
+    public void imageComesBackWithDeletedStation() throws Exception {
+        StreamDatabase db = new StreamDatabase(ctx);
+        db.deleteUri(station);
+        db.close();
+        StationImages.delete(ctx, station.getId());
+        BackupUtils.Counts c = restore();
+        assertTrue(c.stations >= 1);
+        UriBean back = ensureStation();
+        assertTrue("restored station has no image (restored " + c.images + " of " + c.imagesInFile + ")",
+                StationImages.has(ctx, back.getId()));
+        assertNotNull(StationImages.load(ctx, back.getId()));
+        assertEquals(1024, StationImages.load(ctx, back.getId()).getWidth());
+    }
+}

@@ -237,6 +237,7 @@
     <string name="restore_done">새 방송국 %d개를 복원했습니다.</string>
     <string name="backup_images">방송국 이미지 %d개 포함</string>
     <string name="restore_images">방송국 이미지 %d개를 복원했습니다.</string>
+    <string name="restore_no_images">이 백업 파일에는 방송국 이미지가 없습니다 (2.4.6 이전 버전으로 만든 백업?).</string>
     <string name="restore_failed">복원하지 못했습니다.</string>
     <string name="pref_pauseonfocusloss_title">다른 앱 소리에 일시정지</string>
     <string name="pref_pauseonfocusloss_summary">다른 앱이 소리를 재생하면 일시정지합니다. 끄면 라디오가 계속 재생됩니다.</string>

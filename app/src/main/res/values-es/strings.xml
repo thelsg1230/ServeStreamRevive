@@ -251,6 +251,7 @@
     <string name="restore_done">Se restauraron %d emisoras nuevas.</string>
     <string name="backup_images">Incluye %d imágenes de emisoras.</string>
     <string name="restore_images">Se restauraron %d imágenes de emisoras.</string>
+    <string name="restore_no_images">Esta copia no contiene imágenes de emisoras (¿creada antes de la versión 2.4.6?).</string>
     <string name="restore_failed">Error al restaurar.</string>
     <string name="skip_button_label">Omitir</string>
     <string name="stop">Detener</string>

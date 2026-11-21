@@ -252,6 +252,7 @@
     <string name="restore_done">%d nouvelles stations restaurées.</string>
     <string name="backup_images">Dont %d images de stations.</string>
     <string name="restore_images">%d images de stations restaurées.</string>
+    <string name="restore_no_images">Cette sauvegarde ne contient aucune image de station (créée avant la version 2.4.6 ?).</string>
     <string name="restore_failed">Échec de la restauration.</string>
     <string name="skip_button_label">Passer</string>
     <string name="stop">Arrêter</string>

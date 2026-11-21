@@ -95,9 +95,12 @@ $T adb install -r -g "$TESTAPK"
 for t in "a_stationListShowsSavedStationsWithImages Android Auto: station list with images" \
          "b_playFromStationList Android Auto: play a station from the list" \
          "c_playFromVoiceSearch Android Auto: play by voice search" \
-         "d_skipButtonsSwitchStations Android Auto: skip buttons switch saved stations"; do
+         "d_skipButtonsSwitchStations Android Auto: skip buttons switch saved stations" \
+         "BackupImageTest#imageComesBackAfterRemovingIt Backup: image restored after removing it" \
+         "BackupImageTest#imageComesBackWithDeletedStation Backup: deleted station restored with image"; do
   set -- $t; m=$1; shift
-  out=$(timeout 180 adb shell am instrument -w -e class net.sourceforge.servestream.AutoBrowseTest#$m \
+  case "$m" in *#*) ;; *) m="AutoBrowseTest#$m" ;; esac
+  out=$(timeout 180 adb shell am instrument -w -e class net.sourceforge.servestream.$m \
         $PKG.test/androidx.test.runner.AndroidJUnitRunner 2>&1)
   echo "$out" | tail -n 30
   res="FAIL"; echo "$out" | grep -q "^OK (1 test)" && res="PASS"

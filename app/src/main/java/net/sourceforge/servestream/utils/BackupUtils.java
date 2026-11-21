@@ -66,83 +66,113 @@ public class BackupUtils {
 	/** File name suggested in the system "save" dialog. */
 	public static final String SUGGESTED_NAME = "servestream-backup.json";
 
-	public synchronized static void backup(Context context, Uri target) {
-		String message;
+	/** Result of a backup or restore: stations written/added, images written/restored, images in the file. */
+	public static final class Counts {
+		public int stations;
+		public int images;
+		public int imagesInFile;
+	}
+
+	/** Writes all stations, with their images, as JSON. */
+	public synchronized static Counts writeBackup(Context context, OutputStream out) throws IOException, JSONException {
 		StreamDatabase streamdb = new StreamDatabase(context);
 		List<UriBean> uris = streamdb.getUris();
 		streamdb.close();
+		Counts counts = new Counts();
+		int[] images = new int[1];
+		out.write(writeJSON(context, uris, images).getBytes("UTF-8"));
+		out.flush();
+		counts.stations = uris.size();
+		counts.images = images[0];
+		counts.imagesInFile = images[0];
+		return counts;
+	}
 
-		if (uris.size() == 0) {
-			message = context.getString(R.string.backup_no_data);
-		} else {
-			OutputStream out = null;
+	/** Adds the stations of a backup that are missing here and brings back their images. */
+	public synchronized static Counts readBackup(Context context, InputStream in) throws IOException, JSONException {
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		byte[] chunk = new byte[65536];
+		int n;
+		while ((n = in.read(chunk)) > 0) {
+			buffer.write(chunk, 0, n);
+		}
+
+		List<String> images = new ArrayList<String>();
+		List<UriBean> uris = parseBackup(buffer.toString("UTF-8"), images);
+		Counts counts = new Counts();
+		StreamDatabase streamdb = new StreamDatabase(context);
+		try {
+			for (int i = 0; i < uris.size(); i++) {
+				String image = images.get(i);
+				if (image != null) {
+					counts.imagesInFile++;
+				}
+				UriBean station = TransportFactory.findUri(streamdb, uris.get(i).getUri());
+				if (station == null) {
+					station = streamdb.saveUri(uris.get(i));
+					counts.stations++;
+				}
+				// never overwrite an image the user already set on this phone
+				if (image != null && station != null && !StationImages.has(context, station.getId())) {
+					try {
+						if (StationImages.saveBytes(context, station.getId(),
+								android.util.Base64.decode(image, android.util.Base64.DEFAULT))) {
+							counts.images++;
+						}
+					} catch (IllegalArgumentException e) {
+						android.util.Log.w("BackupUtils", "damaged image in backup", e);
+					}
+				}
+			}
+		} finally {
+			streamdb.close();
+		}
+		return counts;
+	}
+
+	public static void backup(Context context, Uri target) {
+		String message;
+		OutputStream out = null;
+		try {
+			out = context.getContentResolver().openOutputStream(target, "wt");
+			if (out == null) {
+				throw new IOException("Cannot open " + target);
+			}
+			Counts counts = writeBackup(context, out);
+			if (counts.stations == 0) {
+				message = context.getString(R.string.backup_no_data);
+			} else {
+				message = context.getString(R.string.backup_done, counts.stations);
+				if (counts.images > 0) {
+					message += "\n" + context.getString(R.string.backup_images, counts.images);
+				}
+			}
+		} catch (Exception e) {
+			message = context.getString(R.string.backup_failed) + "\n" + e.getMessage();
+		} finally {
 			try {
-				out = context.getContentResolver().openOutputStream(target, "wt");
-				if (out == null) {
-					throw new IOException("Cannot open " + target);
-				}
-				int[] images = new int[1];
-				out.write(writeJSON(context, uris, images).getBytes("UTF-8"));
-				message = context.getString(R.string.backup_done, uris.size());
-				if (images[0] > 0) {
-					message += "\n" + context.getString(R.string.backup_images, images[0]);
-				}
-			} catch (Exception e) {
-				message = context.getString(R.string.backup_failed) + "\n" + e.getMessage();
-			} finally {
-				try {
-					if (out != null) out.close();
-				} catch (IOException ignored) {
-				}
+				if (out != null) out.close();
+			} catch (IOException ignored) {
 			}
 		}
 
 		showBackupDialog(context, message);
 	}
 
-	public synchronized static void restore(Context context, Uri source) {
+	public static void restore(Context context, Uri source) {
 		String message;
-		StreamDatabase streamdb = new StreamDatabase(context);
 		InputStream in = null;
-
 		try {
 			in = context.getContentResolver().openInputStream(source);
 			if (in == null) {
 				throw new IOException("Cannot open " + source);
 			}
-			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-			byte[] chunk = new byte[8192];
-			int n;
-			while ((n = in.read(chunk)) > 0) {
-				buffer.write(chunk, 0, n);
-			}
-
-			List<String> images = new ArrayList<String>();
-			List<UriBean> uris = parseBackup(buffer.toString("UTF-8"), images);
-			int added = 0;
-			int restoredImages = 0;
-			for (int i = 0; i < uris.size(); i++) {
-				UriBean station = TransportFactory.findUri(streamdb, uris.get(i).getUri());
-				if (station == null) {
-					station = streamdb.saveUri(uris.get(i));
-					added++;
-				}
-				String image = images.get(i);
-				// never overwrite an image the user already set on this phone
-				if (image != null && station != null && !StationImages.has(context, station.getId())) {
-					try {
-						if (StationImages.saveBytes(context, station.getId(),
-								android.util.Base64.decode(image, android.util.Base64.DEFAULT))) {
-							restoredImages++;
-						}
-					} catch (IllegalArgumentException ignored) {
-						// damaged image data: keep the station, skip the picture
-					}
-				}
-			}
-			message = context.getString(R.string.restore_done, added);
-			if (restoredImages > 0) {
-				message += "\n" + context.getString(R.string.restore_images, restoredImages);
+			Counts counts = readBackup(context, in);
+			message = context.getString(R.string.restore_done, counts.stations);
+			if (counts.images > 0) {
+				message += "\n" + context.getString(R.string.restore_images, counts.images);
+			} else if (counts.imagesInFile == 0) {
+				message += "\n" + context.getString(R.string.restore_no_images);
 			}
 		} catch (Exception e) {
 			message = context.getString(R.string.restore_failed) + "\n" + e.getMessage();
@@ -151,7 +181,6 @@ public class BackupUtils {
 				if (in != null) in.close();
 			} catch (IOException ignored) {
 			}
-			streamdb.close();
 		}
 
 		showBackupDialog(context, message);

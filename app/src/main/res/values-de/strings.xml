@@ -265,6 +265,7 @@
     <string name="restore_done">%d neue Sender wiederhergestellt.</string>
     <string name="backup_images">Inklusive %d Senderbilder.</string>
     <string name="restore_images">%d Senderbilder wiederhergestellt.</string>
+    <string name="restore_no_images">Diese Sicherung enthält keine Senderbilder (vor Version 2.4.6 erstellt?).</string>
     <string name="restore_failed">Wiederherstellung fehlgeschlagen.</string>
     <string name="skip_button_label">Überspringen</string>
     <string name="stop">Stopp</string>

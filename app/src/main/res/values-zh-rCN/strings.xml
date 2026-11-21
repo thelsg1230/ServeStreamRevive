@@ -131,6 +131,7 @@
     <string name="restore_done">已恢复 %d 个新电台。</string>
     <string name="backup_images">包含 %d 张电台图片。</string>
     <string name="restore_images">已恢复 %d 张电台图片。</string>
+    <string name="restore_no_images">此备份不含电台图片（由 2.4.6 之前的版本创建？）。</string>
     <string name="restore_failed">恢复失败。</string>
     <string name="pref_pauseonfocusloss_title">其他应用播放声音时暂停</string>
     <string name="pref_pauseonfocusloss_summary">其他应用播放声音时暂停。关闭后电台将继续播放。</string>
