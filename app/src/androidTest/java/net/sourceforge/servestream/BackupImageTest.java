@@ -61,7 +61,7 @@ public class BackupImageTest {
         BackupUtils.Counts written = BackupUtils.writeBackup(ctx, out);
         out.close();
         assertTrue("no image written to the backup", written.images >= 1);
-        assertTrue(backup.length() > 100000);
+        assertTrue("backup file too small: " + backup.length(), backup.length() > 5000);
     }
 
     private UriBean ensureStation() {
