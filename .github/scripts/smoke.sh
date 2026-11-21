@@ -99,7 +99,8 @@ for t in "a_stationListShowsSavedStationsWithImages Android Auto: station list w
          "BackupImageTest#imageComesBackAfterRemovingIt Backup: image restored after removing it" \
          "BackupImageTest#imageComesBackWithDeletedStation Backup: deleted station restored with image" \
          "BackupImageTest#imageComesBackWhenALeftoverFileExists Backup: image restored over a leftover file" \
-         "BackupImageTest#leftoverPicturesAreCleanedUp Backup: leftover pictures cleaned up"; do
+         "BackupImageTest#leftoverPicturesAreCleanedUp Backup: leftover pictures cleaned up" \
+         "BackupImageTest#tenStationsAllImagesComeBack Backup: ten stations, all images restored"; do
   set -- $t; m=$1; shift
   case "$m" in *#*) ;; *) m="AutoBrowseTest#$m" ;; esac
   out=$(timeout 180 adb shell am instrument -w -e class net.sourceforge.servestream.$m \
