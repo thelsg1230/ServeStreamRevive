@@ -1430,6 +1430,10 @@ public class MediaPlaybackService extends androidx.media.MediaBrowserServiceComp
         } else if (what.equals(META_CHANGED)) {
             // Update the remote controls
             updateMediaSessionMetadata();
+        } else if (what.equals(PLAYBACK_STARTED)) {
+            // switching stations while playing never changes the play state,
+            // so leave the "connecting" state shown during the switch here
+            setPlayerStatus();
         }
 
         if (what.equals(QUEUE_CHANGED)) {
