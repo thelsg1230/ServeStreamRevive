@@ -127,6 +127,33 @@ public final class StationImages {
         }
     }
 
+    /** Removes pictures whose station no longer exists (left by older versions). Call off the main thread. */
+    public static void removeOrphans(Context c) {
+        File[] files = new File(c.getFilesDir(), DIR).listFiles();
+        if (files == null || files.length == 0) {
+            return;
+        }
+        java.util.Set<String> keep = new java.util.HashSet<String>();
+        StreamDatabase db = new StreamDatabase(c);
+        try {
+            for (UriBean bean : db.getUris()) {
+                keep.add(bean.getId() + ".jpg");
+            }
+        } finally {
+            db.close();
+        }
+        for (File f : files) {
+            if (!keep.contains(f.getName())) {
+                //noinspection ResultOfMethodCallIgnored
+                f.delete();
+                try {
+                    sCache.remove(Long.parseLong(f.getName().replace(".jpg", "")));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+    }
+
     public static void delete(Context c, long stationId) {
         //noinspection ResultOfMethodCallIgnored
         file(c, stationId).delete();

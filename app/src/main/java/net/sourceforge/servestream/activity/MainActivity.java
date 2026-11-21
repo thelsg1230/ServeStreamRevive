@@ -81,6 +81,15 @@ public class MainActivity extends AppCompatActivity implements
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		if (savedInstanceState == null) {
+			// pictures of stations deleted by older versions would be picked up by new stations
+			final android.content.Context app = getApplicationContext();
+			new Thread(new Runnable() {
+				public void run() {
+					net.sourceforge.servestream.utils.StationImages.removeOrphans(app);
+				}
+			}, "StationImageCleanup").start();
+		}
+		if (savedInstanceState == null) {
 			net.sourceforge.servestream.utils.CrashReporter.showIfAny(this);
 		}
 		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

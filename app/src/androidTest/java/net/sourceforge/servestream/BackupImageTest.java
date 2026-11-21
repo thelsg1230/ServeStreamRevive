@@ -108,4 +108,45 @@ public class BackupImageTest {
         assertNotNull(StationImages.load(ctx, back.getId()));
         assertEquals(1024, StationImages.load(ctx, back.getId()).getWidth());
     }
+
+    /** Bulk delete used to leave the picture file behind; a restored station reusing the number skipped its image. */
+    @Test
+    public void imageComesBackWhenALeftoverFileExists() throws Exception {
+        StreamDatabase db = new StreamDatabase(ctx);
+        db.deleteUri(station);
+        db.close();
+        // leave a different picture under the old number, as older versions did
+        Bitmap stale = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888);
+        stale.eraseColor(Color.RED);
+        ByteArrayOutputStream jpeg = new ByteArrayOutputStream();
+        stale.compress(Bitmap.CompressFormat.JPEG, 90, jpeg);
+        long oldId = station.getId();
+        assertTrue(StationImages.saveBytes(ctx, oldId, jpeg.toByteArray()));
+        // ... and make the restored station get that very number
+        long maxId = 0;
+        db = new StreamDatabase(ctx);
+        for (UriBean b : db.getUris()) maxId = Math.max(maxId, b.getId());
+        db.close();
+        for (long id = oldId; id > maxId; id--) {
+            if (id != oldId) StationImages.delete(ctx, id);
+        }
+
+        BackupUtils.Counts c = restore();
+        UriBean back = ensureStation();
+        assertTrue("restored " + c.images + " of " + c.imagesInFile, c.images >= 1);
+        assertEquals("restored station shows a leftover picture", 1024,
+                StationImages.load(ctx, back.getId()).getWidth());
+    }
+
+    @Test
+    public void leftoverPicturesAreCleanedUp() throws Exception {
+        long ghost = 987654;
+        Bitmap b = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888);
+        ByteArrayOutputStream jpeg = new ByteArrayOutputStream();
+        b.compress(Bitmap.CompressFormat.JPEG, 90, jpeg);
+        assertTrue(StationImages.saveBytes(ctx, ghost, jpeg.toByteArray()));
+        StationImages.removeOrphans(ctx);
+        assertFalse(StationImages.has(ctx, ghost));
+        assertTrue("a saved station's picture was removed", StationImages.has(ctx, station.getId()));
+    }
 }

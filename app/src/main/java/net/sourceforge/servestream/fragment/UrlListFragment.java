@@ -628,6 +628,8 @@ public class UrlListFragment extends ListFragment implements
 			        
 			        for (int i = 0; i < selectedItems.size(); i++) {
 			        	mStreamdb.deleteUri(selectedItems.get(i));
+			        	// the picture goes with the station (a new station may reuse its number)
+			        	net.sourceforge.servestream.utils.StationImages.delete(getActivity(), selectedItems.get(i).getId());
 			        }
 			        
 					mode.finish(); // Action picked, so close the CAB

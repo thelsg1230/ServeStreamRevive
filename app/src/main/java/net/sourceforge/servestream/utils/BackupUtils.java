@@ -108,12 +108,16 @@ public class BackupUtils {
 					counts.imagesInFile++;
 				}
 				UriBean station = TransportFactory.findUri(streamdb, uris.get(i).getUri());
+				boolean added = false;
 				if (station == null) {
 					station = streamdb.saveUri(uris.get(i));
 					counts.stations++;
+					added = true;
 				}
-				// never overwrite an image the user already set on this phone
-				if (image != null && station != null && !StationImages.has(context, station.getId())) {
+				// a new station has no picture of its own yet: anything on disk under its
+				// number is left over from a deleted station. Existing stations keep the
+				// picture the user set on this phone.
+				if (image != null && station != null && (added || !StationImages.has(context, station.getId()))) {
 					try {
 						if (StationImages.saveBytes(context, station.getId(),
 								android.util.Base64.decode(image, android.util.Base64.DEFAULT))) {
